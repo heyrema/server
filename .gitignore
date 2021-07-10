@@ -123,3 +123,7 @@ dist
 # HTTP request templates
 *.http
 *.rest
+
+
+# Zone identifiers
+*:Zone.Identifier
