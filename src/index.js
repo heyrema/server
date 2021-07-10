@@ -14,6 +14,8 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const { statusCode } = require('statushttp');
 
+const templateRouter = require('./routes/template');
+
 const PORT = process.env.PORT ?? 8080;
 const DB = process.env.DB ?? `mongodb://localhost/rema`;
 
@@ -25,6 +27,7 @@ try {
 	await mongoose.connect(DB, {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
+		useCreateIndex: true
 	});
 	console.log(`Connected to database. 🔐`);
 } catch(e) {
@@ -50,10 +53,16 @@ app.use((req, res, next) => {
 	next();
 });
 
+// Parsing request bodies
+app.use(express.json({ limit: '10mb', strict: false }));
+app.use(express.urlencoded({ extended: true }));
+
 // Static files
 app.use(express.static(path.join(__dirname, 'static', 'public')));
 
-app.all('*', (req, res) => res.send('Hi'));
+app.use('/template', templateRouter);
+
+app.all('*', (req, res) => res.status(statusCode.NOT_IMPLEMENTED).send('Hello, World! :) Check back later for more.'));
 
 app.listen(PORT, () => console.log(`Rema up on port ${PORT}. 😎`));
 
