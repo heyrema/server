@@ -1,0 +1,26 @@
+{
+  "name": "rema",
+  "version": "1.0.0",
+  "description": "A powerful certificate generation and management system.",
+  "main": "index.js",
+  "private": "true",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paramsiddharth/rema.git"
+  },
+  "keywords": [
+    "certificate",
+    "management",
+    "generation",
+    "credential"
+  ],
+  "author": "Param Siddharth <contact@paramsid.com> (http://www.paramsid.com/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paramsiddharth/rema/issues"
+  },
+  "homepage": "https://github.com/paramsiddharth/rema#readme"
+}
