@@ -10,7 +10,6 @@ const validateImage = async src => {
 	if (!/^(https?:\/\/|data:)/.test(src)) {
 		try {
 			const location = path.join(INTERNAL_STATIC_DIR, src);
-			console.log(location);
 			await fs.stat(location);
 		} catch(e) {
 			return false;
@@ -20,7 +19,7 @@ const validateImage = async src => {
 };
 
 // Retrieve absolute path if local
-const getImageLocation = src => {
+const getImageLocation = async src => {
 	if (validateImage(src))
 		return /^(https?:\/\/|data:)/.test(src) ? src : path.join(INTERNAL_STATIC_DIR, src);
 	return false;

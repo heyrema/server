@@ -15,17 +15,6 @@ const xySchema = new Schema({
 	_id: false
 });
 
-const imageSchema = new Schema({
-	src: {
-		type: String,
-		required: false,
-		default: null
-	},
-	dimensions: xySchema
-}, {
-	_id: false
-});
-
 const colourSchema = new Schema({
 	value: {
 		type: String,
@@ -44,22 +33,26 @@ const gradientSchema = new Schema({
 			required: true
 		},
 		colour: colourSchema
-	})]
+	}, { _id: false })]
 }, {
 	_id: false
 });
 
 const patternSchema = new Schema({
-	image: imageSchema,
+	image: {
+		type: String,
+		required: true
+	},
+	dimensions: xySchema,
+	/**
+	 * Possible values:
+	 * 1. repeat (Default)
+	 * 2. repeat-x
+	 * 3. repeat-y
+	 * 4. no-repeat
+	 */
 	repetition: {
 		type: String,
-		/**
-		 * Possible values:
-		 * 1. repeat (Default)
-		 * 2. repeat-x
-		 * 3. repeat-y
-		 * 4. no-repeat
-		 */
 		default: 'repeat'
 	}
 }, {
@@ -67,14 +60,14 @@ const patternSchema = new Schema({
 });
 
 const styleSchema = new Schema({
+	/**
+	 * Possible values:
+	 * 1. colour (Default)
+	 * 2. gradient
+	 * 3. pattern
+	 */
 	type: {
 		type: String,
-		/**
-		 * Possible values:
-		 * 1. colour (Default)
-		 * 2. gradient
-		 * 3. pattern
-		 */
 		default: 'colour'
 	},
 	colour: {
@@ -106,16 +99,16 @@ const textFormatSchema = new Schema({
 		default: 10
 	},
 	style: styleSchema,
+	/**
+	 * Possible values:
+	 * 1. left (Default)
+	 * 2. centre
+	 * 3. right
+	 * 4. start
+	 * 5. end
+	 */
 	align: {
 		type: String,
-		/**
-		 * Possible values:
-		 * 1. left (Default)
-		 * 2. centre
-		 * 3. right
-		 * 4. start
-		 * 5. end
-		 */
 		default: 'left',
 	},
 	selectable: {
@@ -139,16 +132,20 @@ const fieldSchema = new Schema({
 		type: Mixed,
 		default: null
 	},
+	required: {
+		type: Boolean,
+		default: true
+	},
+	/**
+	 * Possible values:
+	 * 1. Number
+	 * 2. Boolean
+	 * 3. String (Default)
+	 * 4. Image
+	 * 5. Date
+	 */
 	type: {
 		type: String,
-		/**
-		 * Possible values:
-		 * 1. Number
-		 * 2. Boolean
-		 * 3. String (Default)
-		 * 4. Image
-		 * 5. Date
-		 */
 		default: 'String'
 	},
 	textFormat: {
@@ -157,7 +154,9 @@ const fieldSchema = new Schema({
 		default: null
 	},
 	image: {
-		type: imageSchema,
+		type: new Schema({
+			expectedSize: xySchema
+		}, { _id: false }),
 		required: false,
 		default: null
 	},
@@ -173,7 +172,6 @@ const fieldSchema = new Schema({
 module.exports = {
 	Mixed,
 	xySchema,
-	imageSchema,
 	colourSchema,
 	gradientSchema,
 	patternSchema,

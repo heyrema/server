@@ -29,7 +29,8 @@ const templateSchema = new Schema({
 		updatedAt: 'date',
 		createdAt: false
 	},
-	id: false
+	id: false,
+	versionKey: false
 });
 
 templateSchema.pre('save', function(next) {
@@ -55,7 +56,12 @@ templateSchema.pre('save', function(next) {
 // Keep the _id for Mongoose's internal use only
 templateSchema.set('toJSON', {
 	transform: function(doc, ret, options) {
-		if (ret._id) delete ret._id;
+		const propsToPrune = [
+			'_id',
+			'__v'
+		];
+		for (const prop of propsToPrune)
+			if (ret[prop]) delete ret[prop];
 		return ret;
 	}
 });

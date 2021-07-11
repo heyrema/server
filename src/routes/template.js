@@ -5,7 +5,8 @@ const templateRouter = Router();
 
 templateRouter.route('/')
 .get(templateController.getAll)
-.post(templateController.naveen);
+.post(templateController.naveen)
+.delete(templateController.deleteMultiple);
 
 templateRouter.route('/:name')
 .get(templateController.getSingle)
@@ -13,5 +14,8 @@ templateRouter.route('/:name')
 
 templateRouter.route('/:name/preview')
 .get(templateController.preview);
+
+templateRouter.route('/:name/extend')
+.post(templateController.extend);
 
 module.exports = templateRouter;
