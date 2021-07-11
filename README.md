@@ -1,5 +1,5 @@
 # Rema
-A powerful and scanable certificate generation and management system
+A powerful and scalable certificate generation and management system
 for individuals, businesses, and organizations.
 
 <br/>
