@@ -1,12 +1,15 @@
 # Rema
-> A powerful and scanable certificate generation and management system
-> for individuals, businesses, and organizations.
+A powerful and scanable certificate generation and management system
+for individuals, businesses, and organizations.
 
 <br/>
 
 <p align='center'>
 <img src='docs/logo.svg' alt='Rema Logo' width='80%' />
 </p>
+
+## Instructions
+See the [wiki](../../wiki) for instructions on setup and development.
 
 ## Execution
 Install the dependencies for `node-canvas` in your operating system as
@@ -36,6 +39,6 @@ export PORT=80
 npm start
 ```
 
-For more information, see the [Wiki](../../wiki).
+For more information, see the [wiki](../../wiki).
 
 # Made with ❤ by [Param](https://www.paramsid.com).
