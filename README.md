@@ -5,7 +5,7 @@ for individuals, businesses, and organizations.
 <br/>
 
 <p align='center'>
-<img src='docs/logo.svg' alt='Rema Logo' width='80%' />
+	<a href='#'><img src='docs/logo.svg' alt='Rema Logo' width='80%' /></a>
 </p>
 
 ## Instructions
