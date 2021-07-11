@@ -11,7 +11,8 @@ const templateSchema = new Schema({
 		type: String,
 		required: true,
 		index: true,
-		unique: true
+		unique: true,
+		primaryKey: true
 	},
 	title: {
 		type: String,
@@ -25,8 +26,10 @@ const templateSchema = new Schema({
 	dimensions: xySchema
 }, {
 	timestamps: {
-		updatedAt: 'date'
-	}
+		updatedAt: 'date',
+		createdAt: false
+	},
+	id: false
 });
 
 templateSchema.pre('save', function(next) {
@@ -47,6 +50,14 @@ templateSchema.pre('save', function(next) {
 	}
 
 	next();
+});
+
+// Keep the _id for Mongoose's internal use only
+templateSchema.set('toJSON', {
+	transform: function(doc, ret, options) {
+		if (ret._id) delete ret._id;
+		return ret;
+	}
 });
 
 const Template = model('template', templateSchema);

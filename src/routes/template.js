@@ -4,10 +4,12 @@ const templateController = require('../controllers/template');
 const templateRouter = Router();
 
 templateRouter.route('/')
+.get(templateController.getAll)
 .post(templateController.naveen);
 
 templateRouter.route('/:name')
-.get(templateController.getSingle);
+.get(templateController.getSingle)
+.delete(templateController.deleteSingle);
 
 templateRouter.route('/:name/preview')
 .get(templateController.preview);

@@ -45,7 +45,9 @@ const naveen = async (req, res) => {
 	}
 		
 	try {
-		const template = new Template(body);
+		const template = new Template(body, {
+
+		});
 
 		await template.save();
 		res.status(statusCode.CREATED).json({
@@ -60,7 +62,7 @@ const naveen = async (req, res) => {
 };
 
 /**
- * For creating a new template
+ * For getting a template
  * @type {RequestHandler}
  */
 const getSingle = async (req, res) => {
@@ -74,13 +76,54 @@ const getSingle = async (req, res) => {
 		msg: `Template found!`,
 		data: template
 	});
-}
+};
+
+/**
+ * For getting all available templates
+ * @type {RequestHandler}
+ */
+const getAll = async (req, res) => {
+	const templates = (await Template.find({}, {
+		_id: 0,
+		name: 1
+	})).map(t => t.name);
+
+	return res.status(statusCode.OK).json({
+		msg: `${templates.length} template(s) found!`,
+		count: templates.length,
+		data: templates
+	});
+};
+
+/**
+ * For creating a new template
+ * @type {RequestHandler}
+ */
+ const deleteSingle = async (req, res) => {
+	const { name } = req.params;
+	const template = await Template.findOne({ name });
+
+	if (template == null)
+		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${name}`);
+	
+	try {
+		const deleted = await template.delete();
+		return res.status(statusCode.OK).json({
+			msg: `Template deleted!`,
+			data: template
+		});
+	} catch(e) {
+		console.log(`Failed to delete template '${name}': ${e.message}`);
+		console.log(e.stack);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete tenplate '${name}'.`);
+	}
+};
 
 /**
  * For generating a template's preview
  * @type {RequestHandler}
  */
-const preview = async (req, res) => {
+ const preview = async (req, res) => {
 	const { name } = req.params;
 	const pdf = Object.keys(req.query).indexOf('pdf') >= 0;
 	const template = await Template.findOne({ name });
@@ -164,5 +207,7 @@ const preview = async (req, res) => {
 module.exports = {
 	naveen,
 	getSingle,
+	getAll,
+	deleteSingle,
 	preview
 };
