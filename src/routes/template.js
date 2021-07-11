@@ -10,6 +10,7 @@ templateRouter.route('/')
 
 templateRouter.route('/:name')
 .get(templateController.getSingle)
+.patch(templateController.patch)
 .delete(templateController.deleteSingle);
 
 templateRouter.route('/:name/preview')

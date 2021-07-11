@@ -15,12 +15,19 @@ const {
 } = require('../helpers/image');
 
 /**
- * Validate and create new template
+ * @callback templatePostValidationCallBack
  * @param {Request} req
  * @param {Response} res
- * @param {Object} req
+ * @param {Object} body
  */
-const validateAndCreateNewTemplate = async (req, res, body) => {
+/**
+ * Validate and do something
+ * @param {Request} req
+ * @param {Response} res
+ * @param {Object} body
+ * @param {templatePostValidationCallBack} cb
+ */
+const validateAndDoSomething = async (req, res, body, cb) => {
 	if (!await validateImage(body.background))
 		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for certificate background: Image not found!`);
 
@@ -40,19 +47,31 @@ const validateAndCreateNewTemplate = async (req, res, body) => {
 		if (field.fixed && field.value == null)
 			return res.status(statusCode.BAD_REQUEST).send(`Fixed field '${field.name}' cannot have an empty value.`);
 	}
-		
-	try {
-		const template = new Template(body);
-		await template.save();
-		res.status(statusCode.CREATED).json({
-			data: template,
-			msg: `Template created!`
-		});
-	} catch(e) {
-		console.log(`Failed to create template: ${e}`);
-		console.log(e.stack);
-		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to create template: ${e.message}`);
-	}
+
+	await cb(req, res, body);
+};
+
+/**
+ * Validate and create new template
+ * @param {Request} req
+ * @param {Response} res
+ * @param {Object} body
+ */
+const validateAndCreateNewTemplate = async (req, res, body) => {
+	await validateAndDoSomething(req, res, body, async (req, res, body) => {
+		try {
+			const template = new Template(body);
+			await template.save();
+			res.status(statusCode.CREATED).json({
+				data: template,
+				msg: `Template created!`
+			});
+		} catch(e) {
+			console.log(`Failed to create template: ${e}`);
+			console.log(e.stack);
+			res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to create template: ${e.message}`);
+		}
+	});
 };
 
 /**
@@ -71,7 +90,7 @@ const naveen = async (req, res) => {
 	if (existingTemplate != null)
 		return res.status(statusCode.CONFLICT).send(`Template '${body.name}' already exists!`);
 
-	validateAndCreateNewTemplate(req, res, body);
+	await validateAndCreateNewTemplate(req, res, body);
 };
 
 /**
@@ -260,7 +279,7 @@ const extend = async (req, res) => {
 	const { body: reqBody } = req;
 
 	for (const docField in reqBody) {
-		if (docField.delete) {
+		if (docField !== 'name' && docField.delete) {
 			delete oldBody[docField];
 			continue;
 		}
@@ -316,7 +335,96 @@ const extend = async (req, res) => {
 	if (!body.background) return res.status(statusCode.BAD_REQUEST).send(`Background required!`);
 	if (!body.dimensions) return res.status(statusCode.BAD_REQUEST).send(`Dimensions required!`);
 
-	validateAndCreateNewTemplate(req, res, body);
+	await validateAndCreateNewTemplate(req, res, body);
+};
+
+/**
+ * For extending an existing template
+ * @type {RequestHandler}
+ */
+ const patch = async (req, res) => {
+	const { name } = req.params;
+	const oldTemplate = await Template.findOne({ name });
+
+	if (oldTemplate == null)
+		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${name}`);
+	
+	if (!req.body.name) req.body.name = name;
+	
+	let oldBody = { ...oldTemplate._doc };
+	if (oldBody._id) delete oldBody._id;
+
+	const { body: reqBody } = req;
+
+	for (const docField in reqBody) {
+		if (docField !== 'name' && docField.delete) {
+			delete oldBody[docField];
+			continue;
+		}
+
+		if (docField === 'name')
+			oldBody.name = reqBody.name;
+		else if (docField === 'fields') {
+			for (const field of reqBody.fields) {
+				if (field.delete) {
+					oldBody.fields = oldBody.fields.filter(f => f.name !== field.name);
+					continue;
+				}
+				
+				const existingField = oldBody.fields.filter(f => f.name === field.name)[0];
+				
+				if (existingField == null)
+					oldBody.fields.push(field);
+				else if (!existingField.fixed || field.force) {
+					oldBody.fields = oldBody.fields.filter(f => f.name !== field.name);
+					
+					let newBody = {
+						...existingField._doc,
+						...field
+					};
+
+					const objFields = [
+						'textFormat',
+						'image'
+					];
+					for (const objField of objFields)
+						if (existingField[objField] != null && field[objField] != null)
+							newBody[objField] = {
+								...existingField._doc[objField]?.toJSON(),
+								...field[objField]
+							};
+
+					oldBody.fields.push(newBody);
+				}
+			}
+		} else
+			oldBody[docField] = reqBody[docField];
+	}
+
+	let body = oldBody;
+
+	if (!body.title) body.title = body.name;
+	if (!body.background) return res.status(statusCode.BAD_REQUEST).send(`Background required!`);
+	if (!body.dimensions) return res.status(statusCode.BAD_REQUEST).send(`Dimensions required!`);
+
+	await validateAndDoSomething(req, res, body, async (req, res, body) => {
+		try {
+			const template = await Template.findOneAndUpdate({
+				name
+			}, { $set: body }, {
+				useFindAndModify: true,
+				new: true
+			});
+			res.status(statusCode.OK).json({
+				data: template,
+				msg: `Template updated!`
+			});
+		} catch(e) {
+			console.log(`Failed to update template: ${e}`);
+			console.log(e.stack);
+			return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to update template: ${e.message}`);
+		}
+	});
 };
 
 module.exports = {
@@ -326,5 +434,6 @@ module.exports = {
 	deleteSingle,
 	deleteMultiple,
 	extend,
-	preview
+	preview,
+	patch
 };
