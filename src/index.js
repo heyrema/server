@@ -60,7 +60,7 @@ app.use(express.urlencoded({ extended: true }));
 // Static files
 app.use(express.static(path.join(__dirname, 'static', 'public')));
 
-app.use('/template', templateRouter);
+app.use('/api/template', templateRouter);
 
 app.all('*', (req, res) => res.status(statusCode.NOT_IMPLEMENTED).send('Hello, World! :) Check back later for more.'));
 
