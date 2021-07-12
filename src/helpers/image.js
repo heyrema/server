@@ -1,5 +1,8 @@
 const path = require('path');
 const fs = require('fs-extra');
+const axios = require('axios').default;
+const { nanoid } = require('nanoid');
+const { extension: mimeExt } = require('mime-types');
 
 const {
 	INTERNAL_STATIC_DIR
@@ -7,7 +10,7 @@ const {
 
 // Test if image is valid
 const validateImage = async src => {
-	if (!/^(https?:\/\/|data:)/.test(src)) {
+	if (!/^(https?\:\/\/|data\:)/.test(src)) {
 		try {
 			const location = path.join(INTERNAL_STATIC_DIR, src);
 			await fs.stat(location);
@@ -20,8 +23,36 @@ const validateImage = async src => {
 
 // Retrieve absolute path if local
 const getImageLocation = async src => {
-	if (validateImage(src))
-		return /^(https?:\/\/|data:)/.test(src) ? src : path.join(INTERNAL_STATIC_DIR, src);
+	if (validateImage(src)) {
+		if (!/^(https?\:\/\/|data\:)/.test(src))
+			return path.join(INTERNAL_STATIC_DIR, src);
+
+		if (/^https?\:\/\//.test(src)) {
+			try {
+				const img = await axios.get(src, { responseType: 'arraybuffer' });
+				const buf = Buffer.from(img.data, 'base64');
+				contentType = img.headers['content-type'];
+				// const dataURI = `data:${contentType};base64,${buf.toString('base64')}`;
+				// console.log(dataURI);
+				if (!contentType.startsWith('image/'))
+					return false;
+				const ext = mimeExt(contentType);
+				const fileName = `image-${nanoid()}.${ext}`;
+				const downloadTo = path.join(INTERNAL_STATIC_DIR, 'downloaded', fileName);
+				try {
+					await fs.outputFile(downloadTo, buf);
+				} catch(e) {
+					return false;
+				}
+				return downloadTo;
+			} catch(e) {
+				console.log(`Invalid image: ${e.message}`);
+				return false;
+			}
+		}
+
+		return src;
+	}
 	return false;
 };
 

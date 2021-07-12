@@ -30,6 +30,12 @@ const {
 const validateAndDoSomething = async (req, res, body, cb) => {
 	if (!await validateImage(body.background))
 		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for certificate background: Image not found!`);
+	
+	const imgLocation = await getImageLocation(body.background);
+	if (!imgLocation)
+		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for background: Image not accessible!`);
+	
+	body.background = imgLocation;
 
 	for (const field of body.fields) {
 		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
@@ -41,7 +47,15 @@ const validateAndDoSomething = async (req, res, body, cb) => {
 
 			const { value } = field?.image ?? {};
 			if (value != null && !await validateImage(value))
-				return res.status(statusCode.BAD_REQUEST).send(`Invalid type for field '${field.name}': Image not found!`);
+				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not found!`);
+			
+			if (value != null) {
+				const imgLocation = await getImageLocation(value);
+				if (!imgLocation)
+					return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not accessible!`);
+				
+				field.image.value = imgLocation;
+			}
 		}
 
 		if (field.fixed && field.value == null)
