@@ -19,4 +19,7 @@ templateRouter.route('/:name/preview')
 templateRouter.route('/:name/extend')
 .post(templateController.extend);
 
+templateRouter.route('/:name/export')
+.get(templateController.exportTemplate);
+
 module.exports = templateRouter;

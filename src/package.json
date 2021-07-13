@@ -37,6 +37,7 @@
     "mongoose": "^5.13.2",
     "morgan": "^1.10.0",
     "nanoid": "^3.1.23",
+    "sanitize-filename": "^1.6.3",
     "statushttp": "^1.0.4",
     "strftime": "^0.10.0",
     "uuid": "^8.3.2"

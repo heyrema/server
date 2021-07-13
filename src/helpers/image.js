@@ -2,7 +2,10 @@ const path = require('path');
 const fs = require('fs-extra');
 const axios = require('axios').default;
 const { nanoid } = require('nanoid');
-const { extension: mimeExt } = require('mime-types');
+const {
+	extension: mimeExt,
+	lookup: mimeType
+} = require('mime-types');
 
 const {
 	INTERNAL_STATIC_DIR
@@ -78,7 +81,16 @@ const getImageLocation = async src => {
 	return false;
 };
 
+const imgToBase64 = async name => {
+	const buf = await fs.readFile(path.join(INTERNAL_STATIC_DIR, name));
+	const extension = path.extname(name);
+	const contentType = mimeType(extension);
+	const dataURI = `data:${contentType};base64,${buf.toString('base64')}`;
+	return dataURI;
+};
+
 module.exports = {
 	validateImage,
-	getImageLocation
+	getImageLocation,
+	imgToBase64
 };

@@ -118,6 +118,10 @@ const fieldSchema = new Schema({
 		type: Mixed,
 		default: null
 	},
+	placeholder: {
+		type: Boolean,
+		default: false
+	},
 	required: {
 		type: Boolean,
 		default: true

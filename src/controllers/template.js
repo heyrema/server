@@ -5,6 +5,7 @@ const { statusCode } = require('statushttp');
 const { nanoid } = require('nanoid');
 const { createCanvas, loadImage } = require('canvas');
 const strftime = require('strftime');
+const sanitizeFileName = require('sanitize-filename');
 
 const Template = require('../models/template');
 const {
@@ -14,7 +15,8 @@ const {
 } = require('../constants');
 const {
 	validateImage,
-	getImageLocation
+	getImageLocation,
+	imgToBase64
 } = require('../helpers/image');
 
 /**
@@ -32,6 +34,9 @@ const validateAndDoSomething = async (req, res, body) => {
 		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for background: Image not accessible!`);
 	
 	body.background = imgLocation;
+
+	if (body.fields == null)
+		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for fields!`);
 
 	for (const field of body.fields) {
 		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
@@ -101,7 +106,7 @@ const validateAndDoSomething = async (req, res, body) => {
 			}
 		}
 
-		if (field.fixed && field.value == null)
+		if ((field.fixed || field.placeholder) && field.value == null)
 			return res.status(statusCode.BAD_REQUEST).send(`Fixed field '${field.name}' cannot have an empty value.`);
 	}
 
@@ -126,7 +131,7 @@ const validateAndCreateNewTemplate = async (req, res, body) => {
 	} catch(e) {
 		console.log(`Failed to create template: ${e}`);
 		console.log(e.stack);
-		res.status(statusCode.BAD_REQUEST).send(`Failed to create template: Bad format!`);
+		res.status(statusCode.BAD_REQUEST).send(`Failed to create template: Bad format (${e.message.substr(0, 120)})!`);
 	}
 };
 
@@ -641,7 +646,54 @@ const patch = async (req, res) => {
  * Exporting templates
  * @type {RequestHandler}
  */
-// TODO
+const exportTemplate = async (req, res) => {
+	const { name } = req.params;
+	const template = await Template.findOne({ name });
+
+	if (template == null)
+		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${name}`);
+	
+	const exportedObj = { ...template._doc };
+	const propsToPrune = [
+		'_id',
+		'__v',
+		'date'
+	];
+	for (const prop of propsToPrune)
+		if (exportedObj[prop]) delete exportedObj[prop];
+	
+	try {
+		exportedObj.background = await imgToBase64(exportedObj.background);
+	} catch(e) {
+		const msg = `Failed to export template '${name}': Unable to export background (${e.message})!`;
+		console.log(msg);
+		console.log(e.stack);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(msg);
+	}
+
+	for (const field of exportedObj.fields) {
+		if (field.type !== 'Image')
+			continue;
+
+		try {
+			if (field.value != null)
+				field.value = await imgToBase64(field.value);
+
+			if (field.defaultValue != null)
+				field.defaultValue = await imgToBase64(field.defaultValue);
+		} catch(e) {
+			const msg = `Failed to export template '${name}': Unable to export field '${field.name}' (${e.message})!`;
+			console.log(msg);
+			console.log(e.stack);
+			return res.status(statusCode.INTERNAL_SERVER_ERROR).send(msg);
+		}
+	}
+
+	const fileName = sanitizeFileName(`template-${name}-${nanoid(10)}.json`)
+	
+	res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+	return res.status(statusCode.OK).json(exportedObj);
+};
 
 module.exports = {
 	naveen,
@@ -651,5 +703,6 @@ module.exports = {
 	deleteMultiple,
 	extend,
 	preview,
-	patch
+	patch,
+	exportTemplate
 };
