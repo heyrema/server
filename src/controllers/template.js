@@ -187,7 +187,7 @@ const getAll = async (req, res) => {
  * For deleting a new template
  * @type {RequestHandler}
  */
- const deleteSingle = async (req, res) => {
+const deleteSingle = async (req, res) => {
 	const { name } = req.params;
 	const template = await Template.findOne({ name });
 
@@ -211,7 +211,7 @@ const getAll = async (req, res) => {
  * For deleting multiple templates
  * @type {RequestHandler}
  */
- const deleteMultiple = async (req, res) => {
+const deleteMultiple = async (req, res) => {
 	const templates = (await Template.find({}, {
 		name: 1,
 		_id: 0
@@ -235,7 +235,7 @@ const getAll = async (req, res) => {
  * For generating a template's preview
  * @type {RequestHandler}
  */
- const preview = async (req, res) => {
+const preview = async (req, res) => {
 	const { name } = req.params;
 	const pdf = Object.keys(req.query).indexOf('pdf') >= 0;
 	const template = await Template.findOne({ name });
@@ -553,7 +553,7 @@ const extend = async (req, res) => {
  * For extending an existing template
  * @type {RequestHandler}
  */
- const patch = async (req, res) => {
+const patch = async (req, res) => {
 	const { name } = req.params;
 	const oldTemplate = await Template.findOne({ name });
 
@@ -636,6 +636,12 @@ const extend = async (req, res) => {
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to update template: ${e.message}`);
 	}
 };
+
+/**
+ * Exporting templates
+ * @type {RequestHandler}
+ */
+// TODO
 
 module.exports = {
 	naveen,
