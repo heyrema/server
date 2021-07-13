@@ -15,15 +15,6 @@ const xySchema = new Schema({
 	_id: false
 });
 
-const colourSchema = new Schema({
-	value: {
-		type: String,
-		default: 'black' // Can be any valid CSS colour identifier (name, hexadecimal, RGB, RGBA, or HSL)
-	}
-}, {
-	_id: false
-});
-
 const gradientSchema = new Schema({
 	start: xySchema,
 	end: xySchema,
@@ -32,7 +23,11 @@ const gradientSchema = new Schema({
 			type: Number,
 			required: true
 		},
-		colour: colourSchema
+		colour: {
+			type: String,
+			required: false,
+			default: null // Can be any valid CSS colour identifier (name, hexadecimal, RGB, RGBA, or HSL)
+		}
 	}, { _id: false })]
 }, {
 	_id: false
@@ -49,9 +44,9 @@ const styleSchema = new Schema({
 		default: 'colour'
 	},
 	colour: {
-		type: colourSchema,
+		type: String,
 		required: false,
-		default: null
+		default: null // Can be any valid CSS colour identifier (name, hexadecimal, RGB, RGBA, or HSL)
 	},
 	gradient: {
 		type: gradientSchema,
@@ -173,9 +168,7 @@ const fieldSchema = new Schema({
 module.exports = {
 	Mixed,
 	xySchema,
-	colourSchema,
 	gradientSchema,
-	patternSchema,
 	styleSchema,
 	textFormatSchema,
 	fieldSchema

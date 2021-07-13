@@ -63,6 +63,14 @@ const validateAndDoSomething = async (req, res, body) => {
 				
 				field.defaultValue = imgLocation;
 			}
+		} else {
+			// Text fields
+			const {
+				style
+			} = field.textFormat ?? {};
+
+			if (style != null && style?.type == 'gradient' && (style.gradient == null || style.gradient.stops?.length < 2))
+				return res.status(statusCode.BAD_REQUEST).send(`Invalid style for field '${field.name}': Invalid gradient configuration!`);
 		}
 
 		if (field.type === 'Date') {
@@ -118,7 +126,7 @@ const validateAndCreateNewTemplate = async (req, res, body) => {
 	} catch(e) {
 		console.log(`Failed to create template: ${e}`);
 		console.log(e.stack);
-		res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to create template: ${e.message}`);
+		res.status(statusCode.BAD_REQUEST).send(`Failed to create template: Bad format!`);
 	}
 };
 
@@ -217,9 +225,9 @@ const getAll = async (req, res) => {
 			count: templates.length
 		});
 	} catch(e) {
-		console.log(`Failed to delete template '${name}': ${e.message}`);
+		console.log(`Failed to delete templates: ${e.message}`);
 		console.log(e.stack);
-		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete tenplate '${name}'.`);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete tenplates.`);
 	}
 };
 
@@ -365,15 +373,34 @@ const getAll = async (req, res) => {
 				if (style != null) {
 					switch (style.type) {
 						case 'colour': {
-							if (style.colour.value === 'invert') {
+							if (style.colour == null)
+								style.colour = 'black';
+							if (style.colour === 'invert') {
 								ctx.globalCompositeOperation = 'difference';
 								ctx.fillStyle = 'white';
 							} else
-								ctx.fillStyle = style.colour.value;
+								ctx.fillStyle = style.colour;
 						}
 						break;
 						case 'gradient': {
-							
+							const {
+								start: {
+									x: x1,
+									y: y1
+								},
+								end: {
+									x: x2,
+									y: y2
+								},
+								stops
+							} = style.gradient;
+
+							const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+
+							for (const stop of stops)
+								grad.addColorStop(stop.fraction, stop.colour);
+
+							ctx.fillStyle = grad;
 						}
 					}
 				}
