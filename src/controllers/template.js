@@ -4,6 +4,7 @@ const { RequestHandler, Request, Response } = require('express');
 const { statusCode } = require('statushttp');
 const { nanoid } = require('nanoid');
 const { createCanvas, loadImage } = require('canvas');
+const strftime = require('strftime');
 
 const Template = require('../models/template');
 const {
@@ -60,14 +61,42 @@ const validateAndDoSomething = async (req, res, body, cb) => {
 			}
 
 			if (defaultValue != null && !await validateImage(defaultValue))
-				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not found!`);
+				return res.status(statusCode.BAD_REQUEST).send(`Invalid default value for field '${field.name}': Image not found!`);
 			
 			if (defaultValue != null) {
 				const imgLocation = await getImageLocation(defaultValue);
 				if (!imgLocation)
-					return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not accessible!`);
+					return res.status(statusCode.BAD_REQUEST).send(`Invalid default value for field '${field.name}': Image not accessible!`);
 				
 				field.defaultValue = imgLocation;
+			}
+		}
+
+		if (field.type === 'Date') {
+			const { value, defaultValue } = field ?? {};
+
+			if (value != null) {
+				if (value === 'now') {
+					field.value = new Date(Date.now());
+				} else {
+					try {
+						new Date(Date.parse(value)).toISOString();
+					} catch(e) {
+						return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Invalid date! Use the UTC/ISO format.`);
+					}
+				}
+			}
+
+			if (defaultValue != null) {
+				if (defaultValue === 'now') {
+					field.defaultValue = new Date(Date.now());
+				} else {
+					try {
+						new Date(Date.parse(defaultValue)).toISOString();
+					} catch(e) {
+						return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Invalid date! Use the UTC/ISO format.`);
+					}
+				}
 			}
 		}
 
@@ -410,6 +439,54 @@ const getAll = async (req, res) => {
 						value = '✓';
 					else if (value === false)
 						value = '✕';
+
+					ctx.fillText(value, x, y);
+				}
+				break;
+				case 'Date': {
+					let {
+						fontSize,
+						fontFamily,
+						selectable
+					} = field.textFormat;
+
+					if (typeof fontSize === 'number') fontSize += 'px';
+					ctx.font = `${fontSize} ${fontFamily}`;
+
+					if (selectable)
+						ctx.textDrawingMode = 'glyph';
+					else
+						ctx.textDrawingMode = 'path';
+
+					const { style } = field.textFormat;
+					if (style != null) {
+						switch (style.type) {
+							case 'colour': {
+								if (style.colour.value === 'invert') {
+									ctx.globalCompositeOperation = 'difference';
+									ctx.fillStyle = 'white';
+								} else
+									ctx.fillStyle = style.colour.value;
+							}
+							break;
+						}
+					}
+
+					let value = field.value ?? field.defaultValue ?? 'now';
+
+					value = new Date(value);
+
+					const format = field.dateFormat ?? '%d/%m/%Y';
+
+					try {
+						value = strftime(format, value);
+					} catch(e) {
+						console.log(`Failed to format date: ${e.message}`);
+						console.log(e.stack);
+						console.log(`Date: ${value}`);
+						console.log(`Format: ${format}`);
+						value = value.toISOString();
+					}
 
 					ctx.fillText(value, x, y);
 				}

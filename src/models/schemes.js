@@ -165,6 +165,11 @@ const fieldSchema = new Schema({
 		required: false,
 		default: null
 	},
+	dateFormat: {
+		type: String,
+		required: false,
+		default: null
+	},
 	position: xySchema,
 	fixed: {
 		type: Boolean,
