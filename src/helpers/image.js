@@ -51,7 +51,29 @@ const getImageLocation = async src => {
 			}
 		}
 
-		return src;
+		{
+			try {
+				const [DATA, contentType, enc, str] = src.split(/[\:;,]/);
+
+				if (!contentType.startsWith('image/'))
+					return false;
+				const ext = mimeExt(contentType);
+				const fileName = `image-${nanoid()}.${ext}`;
+				const downloadTo = path.join(INTERNAL_STATIC_DIR, 'downloaded', fileName);
+
+				const buf = Buffer.from(str, enc);
+				try {
+					await fs.outputFile(downloadTo, buf);
+				} catch(e) {
+					return false;
+				}
+
+				return downloadTo;
+			} catch(e) {
+				console.log(`Failed to parse image data URI: ${e}`);
+				console.log(e.stack);
+			}
+		}
 	}
 	return false;
 };
