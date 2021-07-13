@@ -18,19 +18,12 @@ const {
 } = require('../helpers/image');
 
 /**
- * @callback templatePostValidationCallBack
- * @param {Request} req
- * @param {Response} res
- * @param {Object} body
- */
-/**
  * Validate and do something
  * @param {Request} req
  * @param {Response} res
  * @param {Object} body
- * @param {templatePostValidationCallBack} cb
  */
-const validateAndDoSomething = async (req, res, body, cb) => {
+const validateAndDoSomething = async (req, res, body) => {
 	if (!await validateImage(body.background))
 		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for certificate background: Image not found!`);
 	
@@ -104,7 +97,7 @@ const validateAndDoSomething = async (req, res, body, cb) => {
 			return res.status(statusCode.BAD_REQUEST).send(`Fixed field '${field.name}' cannot have an empty value.`);
 	}
 
-	await cb(req, res, body);
+	return true;
 };
 
 /**
@@ -114,20 +107,19 @@ const validateAndDoSomething = async (req, res, body, cb) => {
  * @param {Object} body
  */
 const validateAndCreateNewTemplate = async (req, res, body) => {
-	await validateAndDoSomething(req, res, body, async (req, res, body) => {
-		try {
-			const template = new Template(body);
-			await template.save();
-			res.status(statusCode.CREATED).json({
-				data: template,
-				msg: `Template created!`
-			});
-		} catch(e) {
-			console.log(`Failed to create template: ${e}`);
-			console.log(e.stack);
-			res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to create template: ${e.message}`);
-		}
-	});
+	try {
+		await validateAndDoSomething(req, res, body);
+		const template = new Template(body);
+		await template.save();
+		res.status(statusCode.CREATED).json({
+			data: template,
+			msg: `Template created!`
+		});
+	} catch(e) {
+		console.log(`Failed to create template: ${e}`);
+		console.log(e.stack);
+		res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to create template: ${e.message}`);
+	}
 };
 
 /**
@@ -326,169 +318,98 @@ const getAll = async (req, res) => {
 			ctx.rotate(field.rotation * Math.PI / 180);
 			ctx.translate(-x, -y);
 
-			switch (field.type) {
-				case 'Number':
-				case 'String': {
-					let {
-						fontSize,
-						fontFamily,
-						align,
-						selectable
-					} = field.textFormat;
-					if (typeof fontSize === 'number') fontSize += 'px';
-					ctx.font = `${fontSize} ${fontFamily}`;
-					
-					if (align) {
-						if (align === 'centre')
-							align = 'center';
-						ctx.textAlign = align;
+			if (field.type === 'Image') {
+				let {
+					expectedSize: {
+						x: width,
+						y: height
 					}
+				} = field.image;
 
-					if (selectable)
-						ctx.textDrawingMode = 'glyph';
-					else
-						ctx.textDrawingMode = 'path';
+				let value = field.value ?? field.defaultValue;
 
-					const { style } = field.textFormat;
-					if (style != null) {
-						switch (style.type) {
-							case 'colour': {
-								if (style.colour.value === 'invert') {
-									ctx.globalCompositeOperation = 'difference';
-									ctx.fillStyle = 'white';
-								} else
-									ctx.fillStyle = style.colour.value;
-							}
-							break;
-						}
-					}
-
-					const value = field.value ?? field.defaultValue ?? field.name;
-					ctx.fillText(value, x, y);
+				// Display an inversion if no value is provided
+				if (value == null) {
+					ctx.globalCompositeOperation = 'difference';
+					ctx.fillStyle = 'white';
+					value = SINGLE_WHITE_PIXEL;
 				}
-				break;
-				case 'Image': {
-					let {
-						expectedSize: {
-							x: width,
-							y: height
-						}
-					} = field.image;
 
-					let value = field.value ?? field.defaultValue;
+				const toLoad = value.startsWith('data:') ? value : path.join(INTERNAL_STATIC_DIR, value);
+				const imgToDraw = await loadImage(toLoad);
+				ctx.drawImage(imgToDraw, x, y, width, height);
+			} else {
+				let {
+					fontSize,
+					fontFamily,
+					align,
+					selectable
+				} = field.textFormat;
+				if (typeof fontSize === 'number') fontSize += 'px';
+				ctx.font = `${fontSize} ${fontFamily}`;
+				
+				if (align) {
+					if (align === 'centre')
+						align = 'center';
+					ctx.textAlign = align;
+				}
 
-					// Display an inversion if no value is provided
-					if (value == null) {
-						/*
-						value = ctx.getImageData(x, y, width, height);
-						const data = value.data;
-						for (let i = 0; i < data.length; i += 4) {
-							data[i]     = 255 - data[i];     // Red
-							data[i + 1] = 255 - data[i + 1]; // Green
-							data[i + 2] = 255 - data[i + 2]; // Blue
+				if (selectable)
+					ctx.textDrawingMode = 'glyph';
+				else
+					ctx.textDrawingMode = 'path';
+
+				const { style } = field.textFormat;
+				if (style != null) {
+					switch (style.type) {
+						case 'colour': {
+							if (style.colour.value === 'invert') {
+								ctx.globalCompositeOperation = 'difference';
+								ctx.fillStyle = 'white';
+							} else
+								ctx.fillStyle = style.colour.value;
 						}
+						break;
+					}
+				}
+
+				switch (field.type) {
+					case 'Number':
+					case 'String': {
+						const value = field.value ?? field.defaultValue ?? field.name;
+						ctx.fillText(value, x, y);
+					}
+					break;
+					case 'Boolean': {
+						let value = field.value ?? field.defaultValue ?? '?';
 						
-						const tmpCanvas = createCanvas(width, height);
-						const tmpCtx = tmpCanvas.getContext('2d');
-						tmpCtx.putImageData(value, 0, 0);
-						value = tmpCanvas.toDataURL();
-						*/
+						if (value === true)
+							value = '✓';
+						else if (value === false)
+							value = '✕';
 
-						ctx.globalCompositeOperation = 'difference';
-						ctx.fillStyle = 'white';
-						value = SINGLE_WHITE_PIXEL;
+						ctx.fillText(value, x, y);
 					}
+					break;
+					case 'Date': {
+						let value = field.value ?? field.defaultValue ?? 'now';
 
-					const toLoad = value.startsWith('data:') ? value : path.join(INTERNAL_STATIC_DIR, value);
-					const imgToDraw = await loadImage(toLoad);
-					ctx.drawImage(imgToDraw, x, y, width, height);
-				}
-				break;
-				case 'Boolean': {
-					let {
-						fontSize,
-						fontFamily,
-						selectable
-					} = field.textFormat;
+						value = new Date(value);
 
-					if (typeof fontSize === 'number') fontSize += 'px';
-					ctx.font = `${fontSize} ${fontFamily}`;
+						const format = field.dateFormat ?? '%d/%m/%Y';
 
-					if (selectable)
-						ctx.textDrawingMode = 'glyph';
-					else
-						ctx.textDrawingMode = 'path';
-
-					const { style } = field.textFormat;
-					if (style != null) {
-						switch (style.type) {
-							case 'colour': {
-								if (style.colour.value === 'invert') {
-									ctx.globalCompositeOperation = 'difference';
-									ctx.fillStyle = 'white';
-								} else
-									ctx.fillStyle = style.colour.value;
-							}
-							break;
+						try {
+							value = strftime(format, value);
+						} catch(e) {
+							console.log(`Failed to format date: ${e.message}`);
+							console.log(e.stack);
+							console.log(`Date: ${value}`);
+							console.log(`Format: ${format}`);
+							value = value.toISOString();
 						}
+
+						ctx.fillText(value, x, y);
 					}
-
-					let value = field.value ?? field.defaultValue ?? '?';
-					
-					if (value === true)
-						value = '✓';
-					else if (value === false)
-						value = '✕';
-
-					ctx.fillText(value, x, y);
-				}
-				break;
-				case 'Date': {
-					let {
-						fontSize,
-						fontFamily,
-						selectable
-					} = field.textFormat;
-
-					if (typeof fontSize === 'number') fontSize += 'px';
-					ctx.font = `${fontSize} ${fontFamily}`;
-
-					if (selectable)
-						ctx.textDrawingMode = 'glyph';
-					else
-						ctx.textDrawingMode = 'path';
-
-					const { style } = field.textFormat;
-					if (style != null) {
-						switch (style.type) {
-							case 'colour': {
-								if (style.colour.value === 'invert') {
-									ctx.globalCompositeOperation = 'difference';
-									ctx.fillStyle = 'white';
-								} else
-									ctx.fillStyle = style.colour.value;
-							}
-							break;
-						}
-					}
-
-					let value = field.value ?? field.defaultValue ?? 'now';
-
-					value = new Date(value);
-
-					const format = field.dateFormat ?? '%d/%m/%Y';
-
-					try {
-						value = strftime(format, value);
-					} catch(e) {
-						console.log(`Failed to format date: ${e.message}`);
-						console.log(e.stack);
-						console.log(`Date: ${value}`);
-						console.log(`Format: ${format}`);
-						value = value.toISOString();
-					}
-
-					ctx.fillText(value, x, y);
 				}
 			}
 		}
@@ -659,24 +580,23 @@ const extend = async (req, res) => {
 	if (!body.background) return res.status(statusCode.BAD_REQUEST).send(`Background required!`);
 	if (!body.dimensions) return res.status(statusCode.BAD_REQUEST).send(`Dimensions required!`);
 
-	await validateAndDoSomething(req, res, body, async (req, res, body) => {
-		try {
-			const template = await Template.findOneAndUpdate({
-				name
-			}, { $set: body }, {
-				useFindAndModify: true,
-				new: true
-			});
-			res.status(statusCode.OK).json({
-				data: template,
-				msg: `Template updated!`
-			});
-		} catch(e) {
-			console.log(`Failed to update template: ${e}`);
-			console.log(e.stack);
-			return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to update template: ${e.message}`);
-		}
-	});
+	try {
+		await validateAndDoSomething(req, res, body);
+		const template = await Template.findOneAndUpdate({
+			name
+		}, { $set: body }, {
+			useFindAndModify: true,
+			new: true
+		});
+		res.status(statusCode.OK).json({
+			data: template,
+			msg: `Template updated!`
+		});
+	} catch(e) {
+		console.log(`Failed to update template: ${e}`);
+		console.log(e.stack);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to update template: ${e.message}`);
+	}
 };
 
 module.exports = {
