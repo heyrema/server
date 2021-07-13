@@ -219,16 +219,24 @@ const getAll = async (req, res) => {
 	ctx.fillRect(0, 0, width, height);
 
 	try {
-		const bgImg = await loadImage(await getImageLocation(template.background));
+		const bgImg = await loadImage(template.background);
 		ctx.drawImage(bgImg, 0, 0);
 	} catch(e) {}
 
 	for (const field of template.fields) {
+		const { x, y } = field.position;
+
 		ctx.fillStyle = null;
 		ctx.strokeStyle = null;
 		ctx.font = null;
 		ctx.textAlign = null;
 		ctx.textDrawingMode = null;
+		ctx.resetTransform();
+
+		ctx.translate(x, y);
+		ctx.rotate(field.rotation * Math.PI / 180);
+		ctx.translate(-x, -y);
+
 		if (field.type === 'String' || field.type === 'Number') {
 			let {
 				fontSize,
@@ -254,7 +262,6 @@ const getAll = async (req, res) => {
 			if (style.type === 'colour')
 				ctx.fillStyle = style.colour.value;
 
-			const { x, y } = field.position;
 			const value = field.defaultValue || field.name;
 			ctx.fillText(value, x, y);
 		}

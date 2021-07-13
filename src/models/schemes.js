@@ -136,6 +136,11 @@ const fieldSchema = new Schema({
 		type: Boolean,
 		default: true
 	},
+	// Angle in degrees
+	rotation: {
+		type: Number,
+		default: 0
+	},
 	/**
 	 * Possible values:
 	 * 1. Number
