@@ -7,7 +7,8 @@ const { createCanvas, loadImage } = require('canvas');
 
 const Template = require('../models/template');
 const {
-	INTERNAL_STATIC_DIR
+	INTERNAL_STATIC_DIR,
+	MAX_CAIRO_DIMENSION
 } = require('../constants');
 const {
 	validateImage,
@@ -201,84 +202,134 @@ const getAll = async (req, res) => {
 	if (template == null)
 		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${name}`);
 	
-	const {
-		x: width,
-		y: height
-	} = template.dimensions;
-
-	let can;
-	
-	if (pdf)
-		can = createCanvas(width, height, 'pdf');
-	else
-		can = createCanvas(width, height);
-	
-	const ctx = can.getContext('2d');
-
-	ctx.fillStyle = '#fff';
-	ctx.fillRect(0, 0, width, height);
-
 	try {
-		const bgImg = await loadImage(template.background);
-		ctx.drawImage(bgImg, 0, 0);
-	} catch(e) {}
+		let {
+			x: width,
+			y: height
+		} = template.dimensions;
 
-	for (const field of template.fields) {
-		const { x, y } = field.position;
+		if (width > MAX_CAIRO_DIMENSION || height > MAX_CAIRO_DIMENSION) {
+			const ratio = width / height;
 
-		ctx.fillStyle = null;
-		ctx.strokeStyle = null;
-		ctx.font = null;
-		ctx.textAlign = null;
-		ctx.textDrawingMode = null;
-		ctx.resetTransform();
+			if (width > height) {
+				console.log('Trimming width', width, MAX_CAIRO_DIMENSION);
+				const oldDim = width;
+				const conversion = MAX_CAIRO_DIMENSION / oldDim;
+				width = MAX_CAIRO_DIMENSION;
+				height = width / ratio;
 
-		ctx.translate(x, y);
-		ctx.rotate(field.rotation * Math.PI / 180);
-		ctx.translate(-x, -y);
+				for (const field of template.fields) {
+					field.position.x *= conversion;
+					field.position.y *= conversion;
 
-		if (field.type === 'String' || field.type === 'Number') {
-			let {
-				fontSize,
-				fontFamily,
-				align,
-				selectable
-			} = field.textFormat;
-			if (typeof fontSize === 'number') fontSize += 'px';
-			ctx.font = `${fontSize} ${fontFamily}`;
-			
-			if (align) {
-				if (align === 'centre')
-					align = 'center';
-				ctx.textAlign = align;
+					if (field.textFormat != null)
+						field.textFormat.fontSize *= conversion;
+					else if (field.image != null) {
+						field.image.expectedSize.x *= conversion;
+						field.image.expectedSize.y *= conversion;
+					}
+				}
+			} else {
+				console.log('Trimming height', height, MAX_CAIRO_DIMENSION);
+				const oldDim = height;
+				const conversion = MAX_CAIRO_DIMENSION / oldDim;
+				height = MAX_CAIRO_DIMENSION;
+				width = height * ratio;
+
+				for (const field of template.fields) {
+					field.position.x *= conversion;
+					field.position.y *= conversion;
+
+					if (field.textFormat != null)
+						field.textFormat.fontSize *= conversion;
+					else if (field.image != null) {
+						field.image.expectedSize.x *= conversion;
+						field.image.expectedSize.y *= conversion;
+					}
+				}
 			}
 
-			if (selectable)
-				ctx.textDrawingMode = 'glyph';
-			else
-				ctx.textDrawingMode = 'path';
-
-			const { style } = field.textFormat;
-			if (style.type === 'colour')
-				ctx.fillStyle = style.colour.value;
-
-			const value = field.defaultValue || field.name;
-			ctx.fillText(value, x, y);
+			console.log(width, height);
 		}
-	}
 
-	if (pdf) {
-		const buf = can.toBuffer('application/pdf', {
-			title: 'Certificate',
-			creator: 'Param Siddharth'
-		});
-		// res.setHeader('Content-Disposition', `attachment; filename=certificate-${nanoid(10)}.pdf`);
-		return res.contentType('pdf').send(buf);
-	}
+		let can;
+		
+		if (pdf)
+			can = createCanvas(width, height, 'pdf');
+		else
+			can = createCanvas(width, height);
+		
+		const ctx = can.getContext('2d');
 
-	const buf = can.toBuffer('image/png');
-	// res.setHeader('Content-Disposition', `attachment; filename=certificate-${nanoid(10)}.png`);
-	res.contentType('png').send(buf);
+		ctx.fillStyle = template.backgroundColour;
+		ctx.fillRect(0, 0, width, height);
+
+		try {
+			const bgImg = await loadImage(template.background);
+			ctx.drawImage(bgImg, 0, 0, width, height);
+		} catch(e) {}
+
+		for (const field of template.fields) {
+			const { x, y } = field.position;
+
+			ctx.fillStyle = null;
+			ctx.strokeStyle = null;
+			ctx.font = null;
+			ctx.textAlign = null;
+			ctx.textDrawingMode = null;
+			ctx.resetTransform();
+
+			ctx.translate(x, y);
+			ctx.rotate(field.rotation * Math.PI / 180);
+			ctx.translate(-x, -y);
+
+			if (field.type === 'String' || field.type === 'Number') {
+				let {
+					fontSize,
+					fontFamily,
+					align,
+					selectable
+				} = field.textFormat;
+				if (typeof fontSize === 'number') fontSize += 'px';
+				ctx.font = `${fontSize} ${fontFamily}`;
+				
+				if (align) {
+					if (align === 'centre')
+						align = 'center';
+					ctx.textAlign = align;
+				}
+
+				if (selectable)
+					ctx.textDrawingMode = 'glyph';
+				else
+					ctx.textDrawingMode = 'path';
+
+				const { style } = field.textFormat;
+				if (style.type === 'colour')
+					ctx.fillStyle = style.colour.value;
+
+				const value = field.defaultValue || field.name;
+				ctx.fillText(value, x, y);
+			}
+		}
+
+		if (pdf) {
+			const buf = can.toBuffer('application/pdf', {
+				title: 'Certificate',
+				creator: 'Param Siddharth'
+			});
+			// res.setHeader('Content-Disposition', `attachment; filename=certificate-${nanoid(10)}.pdf`);
+			return res.contentType('pdf').send(buf);
+		}
+
+		const buf = can.toBuffer('image/png');
+		// res.setHeader('Content-Disposition', `attachment; filename=certificate-${nanoid(10)}.png`);
+		res.contentType('png').send(buf);
+	} catch(e) {
+		console.log(`Failed to render: ${e.message}`);
+		console.log(e.stack);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to generate preview: ${e.message}`);
+	}
 };
 
 /**

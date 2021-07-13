@@ -3,6 +3,7 @@
  * PORT: The port on which Rema should run.
  * DB: The MongoDB connection URI.
  * NODE_ENV: The runtime environment, 'development' or 'production'.
+ * MAX_DIMENSION_OVERRIDE: Override the maximum dimension supported by Rema; Can go as high as 32767 (the maximum supported by Cairo)
  */
 require('dotenv').config();
 

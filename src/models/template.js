@@ -23,6 +23,10 @@ const templateSchema = new Schema({
 		type: String,
 		required: true
 	},
+	backgroundColour: {
+		type: String,
+		default: 'white'
+	},
 	dimensions: xySchema
 }, {
 	timestamps: {
