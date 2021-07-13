@@ -8,7 +8,8 @@ const { createCanvas, loadImage } = require('canvas');
 const Template = require('../models/template');
 const {
 	INTERNAL_STATIC_DIR,
-	MAX_CAIRO_DIMENSION
+	MAX_CAIRO_DIMENSION,
+	SINGLE_WHITE_PIXEL
 } = require('../constants');
 const {
 	validateImage,
@@ -283,73 +284,135 @@ const getAll = async (req, res) => {
 		for (const field of template.fields) {
 			const { x, y } = field.position;
 
-			ctx.filter = null;
-			ctx.fillStyle = null;
-			ctx.strokeStyle = null;
-			ctx.font = null;
-			ctx.textAlign = null;
-			ctx.textDrawingMode = null;
+			ctx.filter = undefined;
+			ctx.globalCompositeOperation = 'source-over';
+			ctx.fillStyle = '#000000';
+			ctx.strokeStyle = '#000000';
+			ctx.font = '10px sans-serif';
+			ctx.textAlign = 'start';
+			ctx.textDrawingMode = 'path';
 			ctx.resetTransform();
 
 			ctx.translate(x, y);
 			ctx.rotate(field.rotation * Math.PI / 180);
 			ctx.translate(-x, -y);
 
-			if (field.type === 'String' || field.type === 'Number') {
-				let {
-					fontSize,
-					fontFamily,
-					align,
-					selectable
-				} = field.textFormat;
-				if (typeof fontSize === 'number') fontSize += 'px';
-				ctx.font = `${fontSize} ${fontFamily}`;
-				
-				if (align) {
-					if (align === 'centre')
-						align = 'center';
-					ctx.textAlign = align;
-				}
-
-				if (selectable)
-					ctx.textDrawingMode = 'glyph';
-				else
-					ctx.textDrawingMode = 'path';
-
-				const { style } = field.textFormat;
-				if (style.type === 'colour')
-					ctx.fillStyle = style.colour.value;
-
-				const value = field.defaultValue || field.name;
-				ctx.fillText(value, x, y);
-			} else if (field.type === 'Image') {
-				let {
-					expectedSize: {
-						x: width,
-						y: height
-					}
-				} = field.image;
-
-				let value = field.value ?? field.defaultValue;
-				if (value == null) {
-					// Display an inversion if no value is provided
-					value = ctx.getImageData(x, y, width, height);
-					const data = value.data;
-					for (let i = 0; i < data.length; i += 4) {
-						data[i]     = 255 - data[i];     // Red
-						data[i + 1] = 255 - data[i + 1]; // Green
-						data[i + 2] = 255 - data[i + 2]; // Blue
-					}
+			switch (field.type) {
+				case 'Number':
+				case 'String': {
+					let {
+						fontSize,
+						fontFamily,
+						align,
+						selectable
+					} = field.textFormat;
+					if (typeof fontSize === 'number') fontSize += 'px';
+					ctx.font = `${fontSize} ${fontFamily}`;
 					
-					const tmpCanvas = createCanvas(width, height);
-					const tmpCtx = tmpCanvas.getContext('2d');
-					tmpCtx.putImageData(value, 0, 0);
-					value = tmpCanvas.toDataURL();
-				}
+					if (align) {
+						if (align === 'centre')
+							align = 'center';
+						ctx.textAlign = align;
+					}
 
-				const toLoad = value.startsWith('data:') ? value : path.join(INTERNAL_STATIC_DIR, value);
-				const imgToDraw = await loadImage(toLoad);
-				ctx.drawImage(imgToDraw, x, y, width, height);
+					if (selectable)
+						ctx.textDrawingMode = 'glyph';
+					else
+						ctx.textDrawingMode = 'path';
+
+					const { style } = field.textFormat;
+					if (style != null) {
+						switch (style.type) {
+							case 'colour': {
+								if (style.colour.value === 'invert') {
+									ctx.globalCompositeOperation = 'difference';
+									ctx.fillStyle = 'white';
+								} else
+									ctx.fillStyle = style.colour.value;
+							}
+							break;
+						}
+					}
+
+					const value = field.value ?? field.defaultValue ?? field.name;
+					ctx.fillText(value, x, y);
+				}
+				break;
+				case 'Image': {
+					let {
+						expectedSize: {
+							x: width,
+							y: height
+						}
+					} = field.image;
+
+					let value = field.value ?? field.defaultValue;
+
+					// Display an inversion if no value is provided
+					if (value == null) {
+						/*
+						value = ctx.getImageData(x, y, width, height);
+						const data = value.data;
+						for (let i = 0; i < data.length; i += 4) {
+							data[i]     = 255 - data[i];     // Red
+							data[i + 1] = 255 - data[i + 1]; // Green
+							data[i + 2] = 255 - data[i + 2]; // Blue
+						}
+						
+						const tmpCanvas = createCanvas(width, height);
+						const tmpCtx = tmpCanvas.getContext('2d');
+						tmpCtx.putImageData(value, 0, 0);
+						value = tmpCanvas.toDataURL();
+						*/
+
+						ctx.globalCompositeOperation = 'difference';
+						ctx.fillStyle = 'white';
+						value = SINGLE_WHITE_PIXEL;
+					}
+
+					const toLoad = value.startsWith('data:') ? value : path.join(INTERNAL_STATIC_DIR, value);
+					const imgToDraw = await loadImage(toLoad);
+					ctx.drawImage(imgToDraw, x, y, width, height);
+				}
+				break;
+				case 'Boolean': {
+					let {
+						fontSize,
+						fontFamily,
+						selectable
+					} = field.textFormat;
+
+					if (typeof fontSize === 'number') fontSize += 'px';
+					ctx.font = `${fontSize} ${fontFamily}`;
+
+					if (selectable)
+						ctx.textDrawingMode = 'glyph';
+					else
+						ctx.textDrawingMode = 'path';
+
+					const { style } = field.textFormat;
+					if (style != null) {
+						switch (style.type) {
+							case 'colour': {
+								if (style.colour.value === 'invert') {
+									ctx.globalCompositeOperation = 'difference';
+									ctx.fillStyle = 'white';
+								} else
+									ctx.fillStyle = style.colour.value;
+							}
+							break;
+						}
+					}
+
+					let value = field.value ?? field.defaultValue ?? '?';
+					
+					if (value === true)
+						value = '✓';
+					else if (value === false)
+						value = '✕';
+
+					ctx.fillText(value, x, y);
+				}
 			}
 		}
 
