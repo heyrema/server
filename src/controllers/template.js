@@ -372,6 +372,9 @@ const getAll = async (req, res) => {
 								ctx.fillStyle = style.colour.value;
 						}
 						break;
+						case 'gradient': {
+							
+						}
 					}
 				}
 

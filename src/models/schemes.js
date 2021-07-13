@@ -38,33 +38,11 @@ const gradientSchema = new Schema({
 	_id: false
 });
 
-const patternSchema = new Schema({
-	image: {
-		type: String,
-		required: true
-	},
-	dimensions: xySchema,
-	/**
-	 * Possible values:
-	 * 1. repeat (Default)
-	 * 2. repeat-x
-	 * 3. repeat-y
-	 * 4. no-repeat
-	 */
-	repetition: {
-		type: String,
-		default: 'repeat'
-	}
-}, {
-	_id: false
-});
-
 const styleSchema = new Schema({
 	/**
 	 * Possible values:
 	 * 1. colour (Default)
 	 * 2. gradient
-	 * 3. pattern
 	 */
 	type: {
 		type: String,
@@ -77,11 +55,6 @@ const styleSchema = new Schema({
 	},
 	gradient: {
 		type: gradientSchema,
-		required: false,
-		default: null
-	},
-	pattern: {
-		type: patternSchema,
 		required: false,
 		default: null
 	}
