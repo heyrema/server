@@ -46,7 +46,7 @@ const validateAndDoSomething = async (req, res, body, cb) => {
 			if (field.image == null)
 				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': An expected size must be defined.`);
 
-			const { value } = field?.image ?? {};
+			const { value, defaultValue } = field ?? {};
 			if (value != null && !await validateImage(value))
 				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not found!`);
 			
@@ -55,7 +55,18 @@ const validateAndDoSomething = async (req, res, body, cb) => {
 				if (!imgLocation)
 					return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not accessible!`);
 				
-				field.image.value = imgLocation;
+				field.value = imgLocation;
+			}
+
+			if (defaultValue != null && !await validateImage(defaultValue))
+				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not found!`);
+			
+			if (defaultValue != null) {
+				const imgLocation = await getImageLocation(defaultValue);
+				if (!imgLocation)
+					return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not accessible!`);
+				
+				field.defaultValue = imgLocation;
 			}
 		}
 
@@ -272,6 +283,7 @@ const getAll = async (req, res) => {
 		for (const field of template.fields) {
 			const { x, y } = field.position;
 
+			ctx.filter = null;
 			ctx.fillStyle = null;
 			ctx.strokeStyle = null;
 			ctx.font = null;
@@ -310,6 +322,33 @@ const getAll = async (req, res) => {
 
 				const value = field.defaultValue || field.name;
 				ctx.fillText(value, x, y);
+			} else if (field.type === 'Image') {
+				let {
+					expectedSize: {
+						x: width,
+						y: height
+					}
+				} = field.image;
+
+				let value = field.value ?? field.defaultValue;
+				if (value == null) {
+					// Display an inversion if no value is provided
+					value = ctx.getImageData(x, y, width, height);
+					const data = value.data;
+					for (let i = 0; i < data.length; i += 4) {
+						data[i]     = 255 - data[i];     // Red
+						data[i + 1] = 255 - data[i + 1]; // Green
+						data[i + 2] = 255 - data[i + 2]; // Blue
+					}
+					
+					const tmpCanvas = createCanvas(width, height);
+					const tmpCtx = tmpCanvas.getContext('2d');
+					tmpCtx.putImageData(value, 0, 0);
+					value = tmpCanvas.toDataURL();
+				}
+
+				const imgToDraw = await loadImage(value);
+				ctx.drawImage(imgToDraw, x, y, width, height);
 			}
 		}
 
