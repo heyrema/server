@@ -276,7 +276,7 @@ const getAll = async (req, res) => {
 		ctx.fillRect(0, 0, width, height);
 
 		try {
-			const bgImg = await loadImage(template.background);
+			const bgImg = await loadImage(path.join(INTERNAL_STATIC_DIR, template.background));
 			ctx.drawImage(bgImg, 0, 0, width, height);
 		} catch(e) {}
 
@@ -347,7 +347,8 @@ const getAll = async (req, res) => {
 					value = tmpCanvas.toDataURL();
 				}
 
-				const imgToDraw = await loadImage(value);
+				const toLoad = value.startsWith('data:') ? value : path.join(INTERNAL_STATIC_DIR, value);
+				const imgToDraw = await loadImage(toLoad);
 				ctx.drawImage(imgToDraw, x, y, width, height);
 			}
 		}

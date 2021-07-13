@@ -25,7 +25,7 @@ const validateImage = async src => {
 const getImageLocation = async src => {
 	if (validateImage(src)) {
 		if (!/^(https?\:\/\/|data\:)/.test(src))
-			return path.join(INTERNAL_STATIC_DIR, src);
+			return src;
 
 		if (/^https?\:\/\//.test(src)) {
 			try {
@@ -44,7 +44,7 @@ const getImageLocation = async src => {
 				} catch(e) {
 					return false;
 				}
-				return downloadTo;
+				return `downloaded/${fileName}`;
 			} catch(e) {
 				console.log(`Invalid image: ${e.message}`);
 				return false;
@@ -68,7 +68,7 @@ const getImageLocation = async src => {
 					return false;
 				}
 
-				return downloadTo;
+				return `downloaded/${fileName}`;
 			} catch(e) {
 				console.log(`Failed to parse image data URI: ${e}`);
 				console.log(e.stack);
