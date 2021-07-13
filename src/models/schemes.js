@@ -89,6 +89,19 @@ const styleSchema = new Schema({
 	_id: false
 });
 
+const strokeSchema = new Schema({
+	colour: {
+		type: String,
+		default: 'black'
+	},
+	width: {
+		type: Number,
+		default: 1
+	}
+}, {
+	_id: false
+});
+
 const textFormatSchema = new Schema({
 	fontFamily: {
 		type: String,
@@ -97,6 +110,11 @@ const textFormatSchema = new Schema({
 	fontSize: {
 		type: Mixed,
 		default: 10
+	},
+	stroke: {
+		type: strokeSchema,
+		required: false,
+		default: null
 	},
 	style: styleSchema,
 	/**

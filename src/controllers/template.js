@@ -308,6 +308,7 @@ const getAll = async (req, res) => {
 			ctx.filter = undefined;
 			ctx.globalCompositeOperation = 'source-over';
 			ctx.fillStyle = '#000000';
+			ctx.lineWidth = 1;
 			ctx.strokeStyle = '#000000';
 			ctx.font = '10px sans-serif';
 			ctx.textAlign = 'start';
@@ -343,7 +344,8 @@ const getAll = async (req, res) => {
 					fontSize,
 					fontFamily,
 					align,
-					selectable
+					selectable,
+					stroke
 				} = field.textFormat;
 				if (typeof fontSize === 'number') fontSize += 'px';
 				ctx.font = `${fontSize} ${fontFamily}`;
@@ -373,26 +375,25 @@ const getAll = async (req, res) => {
 					}
 				}
 
+				let value;
+
 				switch (field.type) {
 					case 'Number':
 					case 'String': {
-						const value = field.value ?? field.defaultValue ?? field.name;
-						ctx.fillText(value, x, y);
+						value = field.value ?? field.defaultValue ?? field.name;
 					}
 					break;
 					case 'Boolean': {
-						let value = field.value ?? field.defaultValue ?? '?';
+						value = field.value ?? field.defaultValue ?? '?';
 						
 						if (value === true)
 							value = '✓';
 						else if (value === false)
 							value = '✕';
-
-						ctx.fillText(value, x, y);
 					}
 					break;
 					case 'Date': {
-						let value = field.value ?? field.defaultValue ?? 'now';
+						value = field.value ?? field.defaultValue ?? 'now';
 
 						value = new Date(value);
 
@@ -407,9 +408,16 @@ const getAll = async (req, res) => {
 							console.log(`Format: ${format}`);
 							value = value.toISOString();
 						}
-
-						ctx.fillText(value, x, y);
 					}
+				}
+
+				ctx.fillText(value, x, y);
+
+				if (stroke != null) {
+					ctx.textDrawingMode = 'path';
+					ctx.strokeStyle = stroke.colour;
+					ctx.lineWidth = stroke.width;
+					ctx.strokeText(value, x, y);
 				}
 			}
 		}
