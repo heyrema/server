@@ -307,8 +307,10 @@ const preview = async (req, res) => {
 		
 		const ctx = can.getContext('2d');
 
-		ctx.fillStyle = template.backgroundColour;
-		ctx.fillRect(0, 0, width, height);
+		if (template.backgroundColour !== 'transparent') {
+			ctx.fillStyle = template.backgroundColour;
+			ctx.fillRect(0, 0, width, height);
+		}
 
 		try {
 			const bgImg = await loadImage(path.join(INTERNAL_STATIC_DIR, template.background));
