@@ -258,7 +258,6 @@ const preview = async (req, res) => {
 			const ratio = width / height;
 
 			if (width > height) {
-				console.log('Trimming width', width, MAX_CAIRO_DIMENSION);
 				const oldDim = width;
 				const conversion = MAX_CAIRO_DIMENSION / oldDim;
 				width = MAX_CAIRO_DIMENSION;
@@ -276,7 +275,6 @@ const preview = async (req, res) => {
 					}
 				}
 			} else {
-				console.log('Trimming height', height, MAX_CAIRO_DIMENSION);
 				const oldDim = height;
 				const conversion = MAX_CAIRO_DIMENSION / oldDim;
 				height = MAX_CAIRO_DIMENSION;
@@ -294,8 +292,6 @@ const preview = async (req, res) => {
 					}
 				}
 			}
-
-			console.log(width, height);
 		}
 
 		let can;
