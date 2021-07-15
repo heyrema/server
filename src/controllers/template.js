@@ -35,6 +35,9 @@ const validateAndDoSomething = async (req, res, body) => {
 		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for fields!`);
 
 	for (const field of body.fields) {
+		if (body.fields.filter(f => f.name === field.name) > 1)
+			return res.status(statusCode.BAD_REQUEST).send(`Duplicate fields named '${field.name}' received!`);
+
 		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
 			return res.status(statusCode.BAD_REQUEST).send(`Invalid type for field '${field.name}': Only Number, Boolean, String, Image, and Date allowed.`);
 		
@@ -120,7 +123,8 @@ const validateAndDoSomething = async (req, res, body) => {
  */
 const validateAndCreateNewTemplate = async (req, res, body) => {
 	try {
-		await validateAndDoSomething(req, res, body);
+		if (await validateAndDoSomething(req, res, body) !== true)
+			return;
 		const template = new Template(body);
 		await template.save();
 		res.status(statusCode.CREATED).json({
@@ -188,7 +192,7 @@ const getAll = async (req, res) => {
 };
 
 /**
- * For deleting a new template
+ * For deleting a template
  * @type {RequestHandler}
  */
 const deleteSingle = async (req, res) => {
@@ -207,7 +211,7 @@ const deleteSingle = async (req, res) => {
 	} catch(e) {
 		console.log(`Failed to delete template '${name}': ${e.message}`);
 		console.log(e.stack);
-		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete tenplate '${name}'.`);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete template '${name}'.`);
 	}
 };
 
@@ -231,7 +235,7 @@ const deleteMultiple = async (req, res) => {
 	} catch(e) {
 		console.log(`Failed to delete templates: ${e.message}`);
 		console.log(e.stack);
-		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete tenplates.`);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete templates.`);
 	}
 };
 
@@ -257,12 +261,10 @@ const preview = async (req, res) => {
 				title: 'Certificate',
 				creator: 'Param Siddharth'
 			});
-			// res.setHeader('Content-Disposition', `attachment; filename=certificate-${nanoid(10)}.pdf`);
 			return res.contentType('pdf').send(buf);
 		}
 
 		const buf = can.toBuffer('image/png');
-		// res.setHeader('Content-Disposition', `attachment; filename=certificate-${nanoid(10)}.png`);
 		res.contentType('png').send(buf);
 	} catch(e) {
 		console.log(`Failed to render: ${e.message}`);
@@ -419,7 +421,8 @@ const patch = async (req, res) => {
 	if (!body.dimensions) return res.status(statusCode.BAD_REQUEST).send(`Dimensions required!`);
 
 	try {
-		await validateAndDoSomething(req, res, body);
+		if (await validateAndDoSomething(req, res, body) !== true)
+			return;
 		const template = await Template.findOneAndUpdate({
 			name
 		}, { $set: body }, {
