@@ -125,7 +125,7 @@ const naveen = async (req, res) => {
 	if (!body.values) body.values = [];
 
 	try {
-		if (!await validateAndDoSomething(req, res, body) === true)
+		if (await validateAndDoSomething(req, res, body) !== true)
 			return;
 		const certificate = new Certificate(body);
 		await certificate.save();
@@ -256,7 +256,7 @@ const patch = async (req, res) => {
 	body.template = template.name;
 
 	try {
-		if (!await validateAndDoSomething(req, res, body) === true)
+		if (await validateAndDoSomething(req, res, body) !== true)
 			return;
 		const certificate = await Certificate.findOneAndUpdate({
 			uid

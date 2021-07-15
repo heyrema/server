@@ -6,6 +6,7 @@ const sanitizeFileName = require('sanitize-filename');
 const { RequestHandler, Request, Response } = require('express');
 
 const Template = require('../models/template');
+const Certificate = require('../models/certificate');
 const {
 	validateImage,
 	getImageLocation,
@@ -197,16 +198,30 @@ const getAll = async (req, res) => {
  */
 const deleteSingle = async (req, res) => {
 	const { name } = req.params;
+	const force = Object.keys(req.query).indexOf('force') >= 0;
 	const template = await Template.findOne({ name });
 
 	if (template == null)
 		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${name}`);
+
+	const certificates = await Certificate.find({ template: name });
+
+	if (certificates.length > 0 && !force)
+		return res.status(statusCode.NOT_ACCEPTABLE).send(`Cannot delete template with one or multiple certificates. Use the query parameter 'force' to bypass.`);
 	
 	try {
+		certificates.map(async c => await c.delete());
 		const deleted = await template.delete();
 		return res.status(statusCode.OK).json({
 			msg: `Template deleted!`,
-			data: template
+			data: {
+				template,
+				certificates: certificates.map(c => c.uid)
+			},
+			count: {
+				templates: 1,
+				certificates: certificates.length
+			}
 		});
 	} catch(e) {
 		console.log(`Failed to delete template '${name}': ${e.message}`);
@@ -220,17 +235,42 @@ const deleteSingle = async (req, res) => {
  * @type {RequestHandler}
  */
 const deleteMultiple = async (req, res) => {
-	const templates = (await Template.find({}, {
-		name: 1,
-		_id: 0
-	})).map(f => f.name);
+	const unused = Object.keys(req.query).indexOf('unused') >= 0;
+	const force = Object.keys(req.query).indexOf('force') >= 0;
+	const templates = await Template.find({});
+	const certificates = await Certificate.find({});
+
+	if (certificates.length > 0 && !force && !unused)
+		return res.status(statusCode.NOT_ACCEPTABLE).send(`Cannot delete templates with one or multiple certificates. Use the query parameter 'force' to bypass, or use 'unused' to delete only unused templates.`);
 
 	try {
+		if (unused && !force) {
+			const used = new Set();
+			certificates.map(c => used.add(c.template));
+			const unusedTemplates = templates.filter(t => !used.has(t.name));
+			unusedTemplates.map(async t => await t.delete());
+			return res.status(statusCode.OK).json({
+				msg: `All unused templates deleted!`,
+				data: {
+					templates: unusedTemplates.map(t => t.name)
+				},
+				count: {
+					templates: unusedTemplates.length
+				}
+			});
+		}
+		certificates.map(async c => await c.delete());
 		const deleted = await Template.deleteMany({});
 		return res.status(statusCode.OK).json({
 			msg: `All templates deleted!`,
-			data: templates,
-			count: templates.length
+			data: {
+				templates: templates.map(t => t.name),
+				certificates: certificates.map(c => c.uid)
+			},
+			count: {
+				templates: templates.length,
+				certificates: certificates.length
+			}
 		});
 	} catch(e) {
 		console.log(`Failed to delete templates: ${e.message}`);
