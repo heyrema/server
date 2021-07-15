@@ -15,7 +15,7 @@ For other discussions, see the [discussions](../../discussions) page.
 
 ## Execution
 Install the dependencies for `node-canvas` in your operating system as
-specified [here](https://www.npmjs.com/package/canvas).
+specified [here](../../wiki/Development-Setup).
 
 ```bash
 # Ubuntu
