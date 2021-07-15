@@ -15,6 +15,9 @@ const {
 const {
 	render
 } = require('../helpers/render');
+const {
+	isValidPlaceholder
+} = require('../helpers/placeholder');
 
 /**
  * Validate and do something
@@ -42,6 +45,15 @@ const validateAndDoSomething = async (req, res, body) => {
 		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
 			return res.status(statusCode.BAD_REQUEST).send(`Invalid type for field '${field.name}': Only Number, Boolean, String, Image, and Date allowed.`);
 		
+		if ((field.fixed || field.placeholder) && field.value == null)
+			return res.status(statusCode.BAD_REQUEST).send(`Fixed field '${field.name}' cannot have an empty value.`);
+
+		if (field.placeholder)
+			if (!isValidPlaceholder(field))
+				return res.status(statusCode.BAD_REQUEST).send(`Field '${field.name}' is an invalid placeholder!`);
+			else
+				continue;
+
 		if (field.type === 'Image') {
 			if (field.image == null)
 				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': An expected size must be defined.`);
@@ -108,9 +120,6 @@ const validateAndDoSomething = async (req, res, body) => {
 				}
 			}
 		}
-
-		if ((field.fixed || field.placeholder) && field.value == null)
-			return res.status(statusCode.BAD_REQUEST).send(`Fixed field '${field.name}' cannot have an empty value.`);
 	}
 
 	return true;
@@ -294,7 +303,10 @@ const preview = async (req, res) => {
 	
 	try {
 		const can = await render({
-			...template._doc
+			...template._doc,
+			templateTitle: template.title,
+			templateDate: template.date,
+			uid: 'Sample UID'
 		}, format);
 
 		if (format === 'pdf') {

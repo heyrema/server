@@ -3,6 +3,9 @@ const { createCanvas, loadImage } = require('canvas');
 const strftime = require('strftime');
 
 const {
+	getPlaceholder, isValidPlaceholder
+} = require('../helpers/placeholder');
+const {
 	INTERNAL_STATIC_DIR,
 	MAX_CAIRO_DIMENSION,
 	SINGLE_WHITE_PIXEL
@@ -77,6 +80,13 @@ const render = async (cert, fmt) => {
 	for (const field of cert.fields) {
 		if (field.skip)
 			continue;
+
+		try {
+			console.log(isValidPlaceholder(field));
+			console.log(getPlaceholder(field)(cert));
+		} catch(e) {}
+		if (field.placeholder)
+			field.value = getPlaceholder(field)(cert);
 
 		const { x, y } = field.position;
 

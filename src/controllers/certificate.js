@@ -35,6 +35,9 @@ const validateAndDoSomething = async (req, res, body) => {
 	const validValues = [];
 
 	for (const field of template.fields) {
+		if (field.placeholder)
+			continue;
+
 		const {
 			name,
 			type,
@@ -296,6 +299,14 @@ const renderCertificate = async (req, res) => {
 	let renderObj = {
 		...template._doc
 	};
+
+	renderObj.date = certificate.date;
+	renderObj.templateDate = template.date;
+
+	renderObj.title = certificate.title;
+	renderObj.templateTitle = template.title;
+
+	renderObj.uid = certificate.uid;
 
 	const providedValues = certificate.values.map(v => v.name);
 
