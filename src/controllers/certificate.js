@@ -351,6 +351,21 @@ const renderCertificate = async (req, res) => {
 	}
 };
 
+/**
+ * For rendering certificates in bulk
+ * @type {RequestHandler}
+ */
+const bulk = async (req, res) => {
+	const { file: dataset } = req;
+	const { template } = req.body;
+
+	return res.status(statusCode.OK).json({
+		msg: `This route is working fine.`,
+		dataset,
+		template
+	});
+};
+
 module.exports = {
 	naveen,
 	getSingle,
@@ -358,5 +373,6 @@ module.exports = {
 	patch,
 	renderCertificate,
 	deleteSingle,
-	deleteMultiple
+	deleteMultiple,
+	bulk
 };

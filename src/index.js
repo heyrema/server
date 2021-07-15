@@ -9,22 +9,37 @@
  */
 require('dotenv').config();
 
-process.on('SIGINT', function() {
-	console.log(`\rExitting Rema... 🌸`);
-	process.exit();
-});
-
 const packageJson = require('./package.json');
+const fs = require('fs-extra');
 const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const { statusCode } = require('statushttp');
+const tmp = require('tmp');
+const ON_DEATH = require('death')({
+	uncaughtException: true
+});
 
 const {
 	PORT,
 	DB
 } = require('./constants');
+
+const tempDirectory = tmp.dirSync();
+process.env.TMP_DIR = tempDirectory.name;
+
+const exitHandler = function(sig, err) {
+	console.log(`\rExitting Rema... 🌸`);
+	if (fs.existsSync(tempDirectory.name))
+		fs.emptyDirSync(tempDirectory.name);
+	tempDirectory.removeCallback();
+	process.exit();
+};
+
+ON_DEATH(exitHandler);
+process.on('SIGUSR1', exitHandler.bind(null));
+process.on('SIGUSR2', exitHandler.bind(null));
 
 const templateRouter = require('./routes/template');
 const certificateRouter = require('./routes/certificate');
