@@ -2,14 +2,15 @@ const fs = require('fs-extra');
 const path = require('path');
 const { check: portInUse } = require('tcp-port-used');
 const {
-	INTERNAL_STATIC_DIR
+	INTERNAL_STATIC_DIR,
+	PORT
 } = require('./constants');
 
 const checks = {
 	portFree: {
-		msg: `Checking if port ${process.env.PORT ?? 8080} is free...`,
+		msg: `Checking if port ${PORT} is free...`,
 		action: async () => {
-			const port = process.env.PORT ?? 8080;
+			const port = PORT;
 			
 			// Creating a new server just to check for a free port has some caveats
 			/* const inUse = p => new Promise(resolve => {

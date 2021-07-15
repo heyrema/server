@@ -20,10 +20,12 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const { statusCode } = require('statushttp');
 
-const templateRouter = require('./routes/template');
+const {
+	PORT,
+	DB
+} = require('./constants');
 
-const PORT = process.env.PORT ?? 8080;
-const DB = process.env.DB ?? `mongodb://localhost/rema`;
+const templateRouter = require('./routes/template');
 
 // For global await support
 (async () => {

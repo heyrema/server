@@ -10,8 +10,13 @@ const MAX_CAIRO_DIMENSION = (
 
 const SINGLE_WHITE_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
 
+const PORT = process.env.PORT ?? 8080;
+const DB = process.env.DB ?? `mongodb://localhost/rema`;
+
 module.exports = {
 	INTERNAL_STATIC_DIR,
 	MAX_CAIRO_DIMENSION,
-	SINGLE_WHITE_PIXEL
+	SINGLE_WHITE_PIXEL,
+	PORT,
+	DB
 };
