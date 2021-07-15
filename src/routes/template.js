@@ -1,25 +1,25 @@
 const { Router } = require('express');
-const templateController = require('../controllers/template');
+const controller = require('../controllers/template');
 
-const templateRouter = Router();
+const router = Router();
 
-templateRouter.route('/')
-.get(templateController.getAll)
-.post(templateController.naveen)
-.delete(templateController.deleteMultiple);
+router.route('/')
+.get(controller.getAll)
+.post(controller.naveen)
+.delete(controller.deleteMultiple);
 
-templateRouter.route('/:name')
-.get(templateController.getSingle)
-.patch(templateController.patch)
-.delete(templateController.deleteSingle);
+router.route('/:name')
+.get(controller.getSingle)
+.patch(controller.patch)
+.delete(controller.deleteSingle);
 
-templateRouter.route('/:name/preview')
-.get(templateController.preview);
+router.route('/:name/preview')
+.get(controller.preview);
 
-templateRouter.route('/:name/extend')
-.post(templateController.extend);
+router.route('/:name/extend')
+.post(controller.extend);
 
-templateRouter.route('/:name/export')
-.get(templateController.exportTemplate);
+router.route('/:name/export')
+.get(controller.exportTemplate);
 
-module.exports = templateRouter;
+module.exports = router;
