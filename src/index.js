@@ -4,11 +4,11 @@
  * DB: The MongoDB connection URI.
  * NODE_ENV: The runtime environment, 'development' or 'production'.
  * MAX_DIMENSION_OVERRIDE: Override the maximum dimension supported by Rema; Can go as high as 32767 (the maximum supported by Cairo)
+ * INTERNAL_STATIC_DIR: The folder where all internal static resources are stored by Rema, such as images.
  */
 require('dotenv').config();
 
 const packageJson = require('./package.json');
-const fs = require('fs-extra');
 const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
@@ -22,6 +22,12 @@ const DB = process.env.DB ?? `mongodb://localhost/rema`;
 
 // For global await support
 (async () => {
+
+// Perform some initial checks
+const initResults = await require('./initCheck')();
+console.log(initResults.msg);
+if (!initResults.success)
+	process.exit(1);
 
 // Connect to database
 try {
@@ -58,8 +64,8 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb', strict: false }));
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
-app.use(express.static(path.join(__dirname, 'static', 'public')));
+// Static files (currently just the favicon)
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/template', templateRouter);
 

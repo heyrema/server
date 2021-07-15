@@ -40,6 +40,7 @@
     "sanitize-filename": "^1.6.3",
     "statushttp": "^1.0.4",
     "strftime": "^0.10.0",
+    "tcp-port-used": "^1.0.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

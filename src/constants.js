@@ -1,7 +1,6 @@
 const path = require('path');
 
-const STATIC_DIR = path.resolve(__dirname, 'static');
-const INTERNAL_STATIC_DIR = path.resolve(STATIC_DIR, 'internal');
+const INTERNAL_STATIC_DIR = process.env.INTERNAL_STATIC_DIR ?? path.resolve(__dirname, '..', 'static');
 
 // Reducing to consume less memory, exceeding it will cause the rendered output to be scaled down
 const MAX_CAIRO_DIMENSION = (
@@ -12,7 +11,6 @@ const MAX_CAIRO_DIMENSION = (
 const SINGLE_WHITE_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
 
 module.exports = {
-	STATIC_DIR,
 	INTERNAL_STATIC_DIR,
 	MAX_CAIRO_DIMENSION,
 	SINGLE_WHITE_PIXEL

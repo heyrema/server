@@ -124,6 +124,5 @@ dist
 *.http
 *.rest
 
-
 # Zone identifiers
 *:Zone.Identifier
