@@ -80,7 +80,12 @@ module.exports = async () => {
 	return {
 		success: criticalFailureCount === 0,
 		msg: `\
-${successCount > 0 ? '✔' : ''} ${successCount} check(s) passed!
-${failureCount > 0 ? '❌' : '✔'} ${failureCount} check(s) failed!`
+${successCount > 0 ? '✔' : '-'} ${successCount} check(s) passed!
+${failureCount > 0 ? '❌' : '✔'} ${failureCount} check(s) failed!
+${
+	criticalFailureCount > 0
+	? `❌ ${criticalFailureCount} critical check(s) failed!`
+	: ''
+}`
 	};
 };
