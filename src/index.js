@@ -5,6 +5,7 @@
  * NODE_ENV: The runtime environment, 'development' or 'production'.
  * MAX_DIMENSION_OVERRIDE: Override the maximum dimension supported by Rema; Can go as high as 32767 (the maximum supported by Cairo)
  * INTERNAL_STATIC_DIR: The folder where all internal static resources are stored by Rema, such as images.
+ * BASE_ROUTE: The route on which Rema is mounted, '/' by default.
  */
 require('dotenv').config();
 

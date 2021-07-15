@@ -12,11 +12,17 @@ const SINGLE_WHITE_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAA
 
 const PORT = process.env.PORT ?? 8080;
 const DB = process.env.DB ?? `mongodb://localhost/rema`;
+const BASE_ROUTE = process.env.BASE_ROUTE ?
+	(
+		process.env.BASE_ROUTE.endsWith('/') ? process.env.BASE_ROUTE : process.env.BASE_ROUTE + '/'
+	)
+	: '/';
 
 module.exports = {
 	INTERNAL_STATIC_DIR,
 	MAX_CAIRO_DIMENSION,
 	SINGLE_WHITE_PIXEL,
 	PORT,
-	DB
+	DB,
+	BASE_ROUTE
 };
