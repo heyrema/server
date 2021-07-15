@@ -195,6 +195,8 @@ const valueSchema = new Schema({
 		type: Mixed,
 		default: null
 	}
+}, {
+	_id: false
 });
 
 module.exports = {

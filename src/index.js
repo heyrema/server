@@ -27,6 +27,7 @@ const {
 } = require('./constants');
 
 const templateRouter = require('./routes/template');
+const certificateRouter = require('./routes/certificate');
 
 // For global await support
 (async () => {
@@ -76,6 +77,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/template', templateRouter);
+app.use('/api/certificate', certificateRouter);
 
 app.all('*', (req, res) => res.status(statusCode.NOT_IMPLEMENTED).send('Hello, World! :) Check back later for more.'));
 
