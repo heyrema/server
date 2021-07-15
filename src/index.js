@@ -8,6 +8,11 @@
  */
 require('dotenv').config();
 
+process.on('SIGINT', function() {
+	console.log(`\rExitting Rema... 🌸`);
+	process.exit();
+});
+
 const packageJson = require('./package.json');
 const path = require('path');
 const express = require('express');
@@ -71,6 +76,8 @@ app.use('/api/template', templateRouter);
 
 app.all('*', (req, res) => res.status(statusCode.NOT_IMPLEMENTED).send('Hello, World! :) Check back later for more.'));
 
-app.listen(PORT, () => console.log(`Rema up on port ${PORT}. 😎`));
+app.listen(PORT, () => console.log(`\
+Rema up on port ${PORT}. 😎
+Press Ctrl+C to exit. ✨`));
 
 })();

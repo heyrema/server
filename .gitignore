@@ -126,3 +126,7 @@ dist
 
 # Zone identifiers
 *:Zone.Identifier
+
+# Temporary files
+tmp/
+temp/
