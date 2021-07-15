@@ -69,10 +69,13 @@ const validateAndDoSomething = async (req, res, body) => {
 				field.defaultValue = imgLocation;
 			}
 		} else {
+			if (field.textFormat == null)
+				field.textFormat = {};
+
 			// Text fields
 			const {
 				style
-			} = field.textFormat ?? {};
+			} = field.textFormat;
 
 			if (style != null && style?.type == 'gradient' && (style.gradient == null || style.gradient.stops?.length < 2))
 				return res.status(statusCode.BAD_REQUEST).send(`Invalid style for field '${field.name}': Invalid gradient configuration!`);
@@ -270,8 +273,8 @@ const preview = async (req, res) => {
 					if (field.textFormat != null)
 						field.textFormat.fontSize *= conversion;
 					else if (field.image != null) {
-						field.image.expectedSize.x *= conversion;
-						field.image.expectedSize.y *= conversion;
+						field.image.size.x *= conversion;
+						field.image.size.y *= conversion;
 					}
 				}
 			} else {
@@ -287,8 +290,8 @@ const preview = async (req, res) => {
 					if (field.textFormat != null)
 						field.textFormat.fontSize *= conversion;
 					else if (field.image != null) {
-						field.image.expectedSize.x *= conversion;
-						field.image.expectedSize.y *= conversion;
+						field.image.size.x *= conversion;
+						field.image.size.y *= conversion;
 					}
 				}
 			}
@@ -323,6 +326,7 @@ const preview = async (req, res) => {
 			ctx.strokeStyle = '#000000';
 			ctx.font = '10px sans-serif';
 			ctx.textAlign = 'start';
+			ctx.direction = 'ltr';
 			ctx.textDrawingMode = 'path';
 			ctx.resetTransform();
 
@@ -332,7 +336,7 @@ const preview = async (req, res) => {
 
 			if (field.type === 'Image') {
 				let {
-					expectedSize: {
+					size: {
 						x: width,
 						y: height
 					}
@@ -355,6 +359,7 @@ const preview = async (req, res) => {
 					fontSize,
 					fontFamily,
 					align,
+					direction,
 					selectable,
 					stroke
 				} = field.textFormat;
@@ -366,6 +371,8 @@ const preview = async (req, res) => {
 						align = 'center';
 					ctx.textAlign = align;
 				}
+
+				ctx.direction = direction;
 
 				if (selectable)
 					ctx.textDrawingMode = 'glyph';
@@ -444,7 +451,18 @@ const preview = async (req, res) => {
 					}
 				}
 
-				ctx.fillText(value, x, y);
+				const {
+					maxChars,
+					maxWidth
+				} = field.textFormat;
+
+				if (maxChars != null)
+					value = value.substr(0, maxChars);
+
+				if (maxWidth == null)
+					ctx.fillText(value, x, y);
+				else
+					ctx.fillText(value, x, y, maxWidth);
 
 				if (stroke != null) {
 					ctx.textDrawingMode = 'path';
@@ -519,7 +537,7 @@ const extend = async (req, res) => {
 					oldBody.fields.push(field);
 				else if (!existingField.fixed || field.force) {
 					oldBody.fields = oldBody.fields.filter(f => f.name !== field.name);
-					
+
 					let newBody = {
 						...existingField._doc,
 						...field

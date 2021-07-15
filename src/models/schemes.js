@@ -79,6 +79,14 @@ const textFormatSchema = new Schema({
 		type: Mixed,
 		default: 10
 	},
+	maxWidth: {
+		type: Number,
+		default: null
+	},
+	maxChars: {
+		type: Number,
+		default: null
+	},
 	stroke: {
 		type: strokeSchema,
 		required: false,
@@ -87,15 +95,24 @@ const textFormatSchema = new Schema({
 	style: styleSchema,
 	/**
 	 * Possible values:
-	 * 1. left (Default)
+	 * 1. left
 	 * 2. centre
 	 * 3. right
-	 * 4. start
+	 * 4. start (Default)
 	 * 5. end
 	 */
 	align: {
 		type: String,
-		default: 'left',
+		default: 'start',
+	},
+	/**
+	 * Possible values:
+	 * 1. ltr (Default)
+	 * 2. rtl
+	 */
+	direction: {
+		type: String,
+		default: 'ltr'
 	},
 	selectable: {
 		type: Boolean,
@@ -150,7 +167,7 @@ const fieldSchema = new Schema({
 	},
 	image: {
 		type: new Schema({
-			expectedSize: xySchema
+			size: xySchema
 		}, { _id: false }),
 		required: false,
 		default: null
