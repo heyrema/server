@@ -186,11 +186,23 @@ const fieldSchema = new Schema({
 	_id: false
 });
 
+const valueSchema = new Schema({
+	name: {
+		type: String,
+		required: true
+	},
+	value: {
+		type: Mixed,
+		default: null
+	}
+});
+
 module.exports = {
 	Mixed,
 	xySchema,
 	gradientSchema,
 	styleSchema,
 	textFormatSchema,
-	fieldSchema
+	fieldSchema,
+	valueSchema
 };
