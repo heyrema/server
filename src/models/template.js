@@ -2,7 +2,6 @@ const { Schema, model } = require('mongoose');
 
 const {
 	fieldSchema,
-	imageSchema,
 	xySchema
 } = require('./schemes');
 
