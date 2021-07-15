@@ -13,4 +13,7 @@ router.route('/:uid')
 .patch(controller.patch)
 .delete(controller.deleteSingle);
 
+router.route('/:uid/view')
+.get(controller.renderCertificate);
+
 module.exports = router;

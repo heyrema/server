@@ -35,8 +35,6 @@ const getImageLocation = async src => {
 				const img = await axios.get(src, { responseType: 'arraybuffer' });
 				const buf = Buffer.from(img.data, 'base64');
 				contentType = img.headers['content-type'];
-				// const dataURI = `data:${contentType};base64,${buf.toString('base64')}`;
-				// console.log(dataURI);
 				if (!contentType.startsWith('image/'))
 					return false;
 				const ext = mimeExt(contentType);

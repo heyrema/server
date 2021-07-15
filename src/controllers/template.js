@@ -35,7 +35,7 @@ const validateAndDoSomething = async (req, res, body) => {
 		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for fields!`);
 
 	for (const field of body.fields) {
-		if (body.fields.filter(f => f.name === field.name) > 1)
+		if (body.fields.filter(f => f.name === field.name).length > 1)
 			return res.status(statusCode.BAD_REQUEST).send(`Duplicate fields named '${field.name}' received!`);
 
 		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
@@ -246,6 +246,7 @@ const deleteMultiple = async (req, res) => {
 const preview = async (req, res) => {
 	const { name } = req.params;
 	const format = Object.keys(req.query).indexOf('pdf') >= 0 ? 'pdf' : 'png';
+	const download = Object.keys(req.query).indexOf('download') >= 0;
 	const template = await Template.findOne({ name });
 
 	if (template == null)
@@ -258,13 +259,23 @@ const preview = async (req, res) => {
 
 		if (format === 'pdf') {
 			const buf = can.toBuffer('application/pdf', {
-				title: 'Certificate',
-				creator: 'Param Siddharth'
+				title: template.title,
+				creator: 'Rema © Param Siddharth'
 			});
+
+			if (download) {
+				const fileName = sanitizeFileName(`template-${nanoid(10)}.pdf`);
+				res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+			}
 			return res.contentType('pdf').send(buf);
 		}
 
 		const buf = can.toBuffer('image/png');
+		
+		if (download) {
+			const fileName = sanitizeFileName(`template-${nanoid(10)}.png`);
+			res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+		}
 		res.contentType('png').send(buf);
 	} catch(e) {
 		console.log(`Failed to render: ${e.message}`);

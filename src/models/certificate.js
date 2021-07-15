@@ -13,6 +13,10 @@ const certificateSchema = new Schema({
 		unique: true,
 		primaryKey: true
 	},
+	title: {
+		type: String,
+		default: 'Certificate'
+	},
 	template: {
 		type: String,
 		required: true

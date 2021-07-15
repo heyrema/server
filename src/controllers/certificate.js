@@ -8,7 +8,9 @@ const { RequestHandler, Request, Response } = require('express');
 const Template = require('../models/template');
 const Certificate = require('../models/certificate');
 const {
-	validateImage
+	validateImage,
+	getImageLocation,
+	imgToBase64
 } = require('../helpers/image');
 const {
 	render
@@ -239,6 +241,7 @@ const patch = async (req, res) => {
 
 	const body = { ...req.body };
 
+	if (body.title == null) body.title = certificate.title;
 	if (body.template) delete body.template;
 	if (body.uid) delete body.uid;
 	if (!body.values) body.values = [];
@@ -272,11 +275,77 @@ const patch = async (req, res) => {
 	}
 };
 
+/**
+ * For rendering a certificate
+ * @type {RequestHandler}
+ */
+const renderCertificate = async (req, res) => {
+	const { uid } = req.params;
+	const format = Object.keys(req.query).indexOf('pdf') >= 0 ? 'pdf' : 'png';
+	const download = Object.keys(req.query).indexOf('download') >= 0;
+	const certificate = await Certificate.findOne({ uid });
+	if (certificate == null)
+		return res.status(statusCode.NOT_FOUND).send(`Certificate not found: ${uid}`);
+	
+	const template = await Template.findOne({ name: certificate.template });
+	if (template == null) {
+		await certificate.delete();
+		return res.status(statusCode.NOT_FOUND).send(`Certificate not found: ${uid}`);
+	}
+
+	let renderObj = {
+		...template._doc
+	};
+
+	const providedValues = certificate.values.map(v => v.name);
+
+	for (let f of renderObj.fields) {
+		if (providedValues.indexOf(f.name) < 0) {
+			if (f.defaultValue == null && f.value == null)
+				f.skip = true;
+			continue;
+		}
+
+		const v = certificate.values.filter(v => v.name === f.name)[0];
+		f.value = v.value;
+	}
+
+	try {
+		const can = await render(renderObj, format);
+
+		if (format === 'pdf') {
+			const buf = can.toBuffer('application/pdf', {
+				title: certificate.title,
+				creator: 'Rema © Param Siddharth'
+			});
+
+			if (download) {
+				const fileName = sanitizeFileName(`certificate-${nanoid(10)}.pdf`);
+				res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+			}
+			return res.contentType('pdf').send(buf);
+		}
+
+		const buf = can.toBuffer('image/png');
+
+		if (download) {
+			const fileName = sanitizeFileName(`certificate-${nanoid(10)}.png`);
+			res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+		}
+		res.contentType('png').send(buf);
+	} catch(e) {
+		console.log(`Failed to render: ${e.message}`);
+		console.log(e.stack);
+		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to generate preview: ${e.message}`);
+	}
+};
+
 module.exports = {
 	naveen,
 	getSingle,
 	getAll,
 	patch,
+	renderCertificate,
 	deleteSingle,
 	deleteMultiple
 };

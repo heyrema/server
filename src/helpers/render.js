@@ -8,7 +8,7 @@ const {
 	SINGLE_WHITE_PIXEL
 } = require('../constants');
 
-// Render a preview of a cert or a certificate
+// Render a preview of a template or a certificate
 const render = async (cert, fmt) => {
 	let {
 		x: width,
@@ -75,6 +75,9 @@ const render = async (cert, fmt) => {
 	} catch(e) {}
 
 	for (const field of cert.fields) {
+		if (field.skip)
+			continue;
+
 		const { x, y } = field.position;
 
 		ctx.filter = undefined;

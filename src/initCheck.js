@@ -81,10 +81,10 @@ module.exports = async () => {
 		success: criticalFailureCount === 0,
 		msg: `\
 ${successCount > 0 ? '✔' : '-'} ${successCount} check(s) passed!
-${failureCount > 0 ? '❌' : '✔'} ${failureCount} check(s) failed!
+${failureCount > 0 ? '❌' : '✔'} ${failureCount} check(s) failed!\
 ${
 	criticalFailureCount > 0
-	? `❌ ${criticalFailureCount} critical check(s) failed!`
+	? `\n❌ ${criticalFailureCount} critical check(s) failed!`
 	: ''
 }`
 	};
