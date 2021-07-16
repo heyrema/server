@@ -81,10 +81,6 @@ const render = async (cert, fmt) => {
 		if (field.skip)
 			continue;
 
-		try {
-			console.log(isValidPlaceholder(field));
-			console.log(getPlaceholder(field)(cert));
-		} catch(e) {}
 		if (field.placeholder)
 			field.value = getPlaceholder(field)(cert);
 
@@ -213,10 +209,10 @@ const render = async (cert, fmt) => {
 					try {
 						value = strftime(format, value);
 					} catch(e) {
-						console.log(`Failed to format date: ${e.message}`);
-						console.log(e.stack);
-						console.log(`Date: ${value}`);
-						console.log(`Format: ${format}`);
+						console.error(`Failed to format date: ${e.message}`);
+						console.error(e.stack);
+						console.error(`Date: ${value}`);
+						console.error(`Format: ${format}`);
 						value = value.toISOString();
 					}
 				}

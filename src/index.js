@@ -17,29 +17,36 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const { statusCode } = require('statushttp');
 const tmp = require('tmp');
+const PrettyError = require('pretty-error');
 const ON_DEATH = require('death')({
 	uncaughtException: true
 });
-
-const {
-	PORT,
-	DB
-} = require('./constants');
 
 const tempDirectory = tmp.dirSync();
 process.env.TMP_DIR = tempDirectory.name;
 
 const exitHandler = function(sig, err) {
-	console.log(`\rExitting Rema... 🌸`);
+	let exitCode = 0;
+	if (typeof err === 'object') {
+		console.log(new PrettyError().render(err));
+		exitCode = 1;
+	}
+	console.log(`\rCleaning up... 🎀`);
 	if (fs.existsSync(tempDirectory.name))
 		fs.emptyDirSync(tempDirectory.name);
 	tempDirectory.removeCallback();
-	process.exit();
+	console.log(`\rExitting Rema... 🌸`);
+	process.exit(exitCode);
 };
 
 ON_DEATH(exitHandler);
 process.on('SIGUSR1', exitHandler.bind(null));
 process.on('SIGUSR2', exitHandler.bind(null));
+
+const {
+	PORT,
+	DB
+} = require('./constants');
 
 const templateRouter = require('./routes/template');
 const certificateRouter = require('./routes/certificate');
@@ -62,7 +69,7 @@ try {
 	});
 	console.log(`Connected to database. 🔐`);
 } catch(e) {
-	console.log(`Failed to connect to database: "${e.message}"`);
+	console.error(`Failed to connect to database: "${e.message}"`);
 	process.exit(1);
 }
 

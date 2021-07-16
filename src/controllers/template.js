@@ -142,8 +142,8 @@ const validateAndCreateNewTemplate = async (req, res, body) => {
 			msg: `Template created!`
 		});
 	} catch(e) {
-		console.log(`Failed to create template: ${e}`);
-		console.log(e.stack);
+		console.error(`Failed to create template: ${e}`);
+		console.error(e.stack);
 		res.status(statusCode.BAD_REQUEST).send(`Failed to create template: Bad format (${e.message.substr(0, 120)})!`);
 	}
 };
@@ -233,8 +233,8 @@ const deleteSingle = async (req, res) => {
 			}
 		});
 	} catch(e) {
-		console.log(`Failed to delete template '${name}': ${e.message}`);
-		console.log(e.stack);
+		console.error(`Failed to delete template '${name}': ${e.message}`);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete template '${name}'.`);
 	}
 };
@@ -282,8 +282,8 @@ const deleteMultiple = async (req, res) => {
 			}
 		});
 	} catch(e) {
-		console.log(`Failed to delete templates: ${e.message}`);
-		console.log(e.stack);
+		console.error(`Failed to delete templates: ${e.message}`);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete templates.`);
 	}
 };
@@ -330,8 +330,8 @@ const preview = async (req, res) => {
 		}
 		res.contentType('png').send(buf);
 	} catch(e) {
-		console.log(`Failed to render: ${e.message}`);
-		console.log(e.stack);
+		console.error(`Failed to render: ${e.message}`);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to generate preview: ${e.message}`);
 	}
 };
@@ -497,8 +497,8 @@ const patch = async (req, res) => {
 			msg: `Template updated!`
 		});
 	} catch(e) {
-		console.log(`Failed to update template: ${e}`);
-		console.log(e.stack);
+		console.error(`Failed to update template: ${e}`);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to update template: ${e.message}`);
 	}
 };
@@ -527,8 +527,8 @@ const exportTemplate = async (req, res) => {
 		exportedObj.background = await imgToBase64(exportedObj.background);
 	} catch(e) {
 		const msg = `Failed to export template '${name}': Unable to export background (${e.message})!`;
-		console.log(msg);
-		console.log(e.stack);
+		console.error(msg);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(msg);
 	}
 
@@ -544,8 +544,8 @@ const exportTemplate = async (req, res) => {
 				field.defaultValue = await imgToBase64(field.defaultValue);
 		} catch(e) {
 			const msg = `Failed to export template '${name}': Unable to export field '${field.name}' (${e.message})!`;
-			console.log(msg);
-			console.log(e.stack);
+			console.error(msg);
+			console.error(e.stack);
 			return res.status(statusCode.INTERNAL_SERVER_ERROR).send(msg);
 		}
 	}

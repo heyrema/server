@@ -1,3 +1,4 @@
+const path = require('path');
 const { Router } = require('express');
 const multer = require('multer');
 
@@ -5,7 +6,7 @@ const controller = require('../controllers/certificate');
 
 const router = Router();
 const upload = multer({
-	dest: process.env.TMP_DIR,
+	dest: path.join(process.env.TMP_DIR, 'uploads'),
 	limits: {
 		fileSize: 50 * 1024 * 1024 // 50 MB
 	}

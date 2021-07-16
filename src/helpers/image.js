@@ -47,7 +47,7 @@ const getImageLocation = async src => {
 				}
 				return `downloaded/${fileName}`;
 			} catch(e) {
-				console.log(`Invalid image: ${e.message}`);
+				console.error(`Invalid image: ${e.message}`);
 				return false;
 			}
 		}
@@ -71,8 +71,8 @@ const getImageLocation = async src => {
 
 				return `downloaded/${fileName}`;
 			} catch(e) {
-				console.log(`Failed to parse image data URI: ${e}`);
-				console.log(e.stack);
+				console.error(`Failed to parse image data URI: ${e}`);
+				console.error(e.stack);
 			}
 		}
 	}

@@ -1,3 +1,5 @@
+const fs = require('fs-extra');
+const csv = require('csv-parser');
 const { statusCode } = require('statushttp');
 const { nanoid } = require('nanoid');
 const sanitizeFileName = require('sanitize-filename');
@@ -13,24 +15,27 @@ const {
 	imgToBase64
 } = require('../helpers/image');
 const {
+	convertTo
+} = require('../helpers/types');
+const {
 	render
 } = require('../helpers/render');
 
+
+
 /**
- * Validate and do something
- * @param {Request} req
- * @param {Response} res
+ * Get the valid version
  * @param {Object} body
  */
-const validateAndDoSomething = async (req, res, body) => {
+const validate = async body => {
 	const { values } = body;
 
 	if (values.filter(v => v?.value == null).length > 0)
-		return res.status(statusCode.BAD_REQUEST).send(`Empty values not allowed!`);
+		throw new Error(`Empty values not allowed!`);
 
 	const template = await Template.findOne({ name: body.template });
 	if (template == null)
-		return res.status(statusCode.NOT_FOUND).send(`Template not found!`);
+		throw new Error(`Template not found!`);
 	
 	const validValues = [];
 
@@ -48,7 +53,7 @@ const validateAndDoSomething = async (req, res, body) => {
 
 		const matches = values.filter(v => v.name === name);
 		if (matches.length > 1)
-			return res.status(statusCode.BAD_REQUEST).send(`Duplicate values for the field '${name}' received!`);
+			throw new Error(`Duplicate values for the field '${name}' received!`);
 
 		const newField = matches[0];
 
@@ -58,7 +63,7 @@ const validateAndDoSomething = async (req, res, body) => {
 			&& required
 			&& defaultValue == null
 		)
-			return res.status(statusCode.BAD_REQUEST).send(`Received no value for field '${name}'!`);
+			throw new Error(`Received no value for field '${name}'!`);
 			
 		if (newField == null || fixed)
 			continue;
@@ -68,17 +73,17 @@ const validateAndDoSomething = async (req, res, body) => {
 		switch (type) {
 			case 'Number': {
 				if (typeof newValue !== 'number')
-					return res.status(statusCode.BAD_REQUEST).send(`Only numbers accepted for '${name}'!`);
+					throw new Error(`Only numbers accepted for '${name}'!`);
 			}
 			break;
 			case 'String': {
 				if (typeof newValue !== 'string')
-					return res.status(statusCode.BAD_REQUEST).send(`Only strings accepted for '${name}'!`);
+					throw new Error(`Only strings accepted for '${name}'!`);
 			}
 			break;
 			case 'Boolean': {
 				if (typeof newValue !== 'boolean')
-					return res.status(statusCode.BAD_REQUEST).send(`Only booleans accepted for '${name}'!`);
+					throw new Error(`Only booleans accepted for '${name}'!`);
 			}
 			break;
 			case 'Date': {
@@ -87,18 +92,18 @@ const validateAndDoSomething = async (req, res, body) => {
 				try {
 					new Date(Date.parse(newValue)).toISOString();
 				} catch(e) {
-					return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${name}': Invalid date! Use the UTC/ISO format.`);
+					throw new Error(`Invalid value for field '${name}': Invalid date! Use the UTC/ISO format.`);
 				}
 			}
 			break;
 			case 'Image': {
 				if (newValue != null && !await validateImage(newValue))
-					return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${name}': Image not found!`);
+					throw new Error(`Invalid value for field '${name}': Image not found!`);
 				
 				if (newValue != null) {
 					const imgLocation = await getImageLocation(newValue);
 					if (!imgLocation)
-						return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${name}': Image not accessible!`);
+						throw new Error(`Invalid value for field '${name}': Image not accessible!`);
 					
 					newValue = imgLocation;
 				}
@@ -113,8 +118,23 @@ const validateAndDoSomething = async (req, res, body) => {
 	}
 
 	body.values = validValues;
+	return body;
+};
 
-	return true;
+/**
+ * Validate and do something
+ * @param {Request} req
+ * @param {Response} res
+ * @param {Object} body
+ */
+const validateAndDoSomething = async (req, res, body) => {
+	try {
+		await validate(body);
+		return true;
+	} catch(e) {
+		res.status(statusCode.BAD_REQUEST).send(e.message);
+		return false;
+	}
 };
 
 /**
@@ -137,8 +157,8 @@ const naveen = async (req, res) => {
 			data: certificate
 		});
 	} catch(e) {
-		console.log(`Failed to create certificate: ${e}`);
-		console.log(e.stack);
+		console.error(`Failed to create certificate: ${e}`);
+		console.error(e.stack);
 		res.status(statusCode.BAD_REQUEST).send(`Failed to create certificate: Bad format (${e.message.substr(0, 120)})!`);
 	}
 };
@@ -195,8 +215,8 @@ const getSingle = async (req, res) => {
 			data: certificate
 		});
 	} catch(e) {
-		console.log(`Failed to delete certificate '${uid}': ${e.message}`);
-		console.log(e.stack);
+		console.error(`Failed to delete certificate '${uid}': ${e.message}`);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete certificate '${uid}'.`);
 	}
 };
@@ -219,8 +239,8 @@ const deleteMultiple = async (req, res) => {
 			count: certificates.length
 		});
 	} catch(e) {
-		console.log(`Failed to delete certificates: ${e.message}`);
-		console.log(e.stack);
+		console.error(`Failed to delete certificates: ${e.message}`);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).json(`Failed to delete certificates.`);
 	}
 };
@@ -272,8 +292,8 @@ const patch = async (req, res) => {
 			msg: `Certificate updated!`
 		});
 	} catch(e) {
-		console.log(`Failed to update certificate: ${e}`);
-		console.log(e.stack);
+		console.error(`Failed to update certificate: ${e}`);
+		console.error(e.stack);
 		res.status(statusCode.BAD_REQUEST).send(`Failed to update certificate: Bad format (${e.message.substr(0, 120)})!`);
 	}
 };
@@ -345,8 +365,8 @@ const renderCertificate = async (req, res) => {
 		}
 		res.contentType('png').send(buf);
 	} catch(e) {
-		console.log(`Failed to render: ${e.message}`);
-		console.log(e.stack);
+		console.error(`Failed to render: ${e.message}`);
+		console.error(e.stack);
 		return res.status(statusCode.INTERNAL_SERVER_ERROR).send(`Failed to generate preview: ${e.message}`);
 	}
 };
@@ -356,14 +376,83 @@ const renderCertificate = async (req, res) => {
  * @type {RequestHandler}
  */
 const bulk = async (req, res) => {
-	const { file: dataset } = req;
+	const { file: list } = req;
 	const { template } = req.body;
 
-	return res.status(statusCode.OK).json({
-		msg: `This route is working fine.`,
-		dataset,
-		template
-	});
+	const templateObj = await Template.findOne({ name: template });
+	if (templateObj == null) {
+		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${template}`);
+	}
+
+	// console.log((await fs.readFile(list.path)).toString());
+
+	let items = [];
+
+	const listReadStream = fs.createReadStream(list.path, { encoding: 'utf-8' });
+	const parser = csv();
+	
+	listReadStream.pipe(parser)
+		.on('data', item => items.push(item))
+		.on('error', e => {
+			console.error(`Error during parsing CSV: ${e.message}`);
+			console.error(e.stack);
+		}).on('end', async () => {
+			if (fs.existsSync(list.path))
+				fs.unlinkSync(list.path);
+			
+			let certs = [];
+			
+			for (const item of items) {
+				let values = Object.keys(item).map(k => ({
+					name: k,
+					value: item[k] === '' || item[k] == null ? null : item[k]
+				})).filter(i => i.value != null);
+
+				values = values.map(v => {
+					const f = templateObj.fields.filter(f => f.name === v.name)[0];
+					if (f == null)
+						return v;
+					let { name, value } = v;
+					if (f.type in convertTo && !f.placeholder)
+						value = convertTo[f.type](value);
+					if (value == null)
+						return v;
+					return { name, value };
+				});
+
+				const certObj = {
+					template,
+					values
+				};
+				
+				try {
+					await validate(certObj);
+				} catch(e) {
+					console.error(e.message);
+				}
+
+				const certificate = new Certificate(certObj);
+				
+				try{
+					await certificate.save();
+				} catch(e) {
+					certs.push({
+						...certObj,
+						error: e.message
+					});
+					continue;
+				}
+
+				certs.push(JSON.parse(JSON.stringify(certificate)));
+			}
+
+			return res.status(statusCode.OK).json({
+				msg: `This route is working fine.`,
+				certificates: certs.filter(c => c?.error == null).map(c => c.uid),
+				errors: certs.filter(c => c?.error != null),
+				template
+			});
+		});
 };
 
 module.exports = {
