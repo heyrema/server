@@ -447,7 +447,7 @@ const bulk = async (req, res) => {
 			}
 
 			return res.status(statusCode.OK).json({
-				msg: `This route is working fine.`,
+				msg: `Certificates generated!`,
 				certificates: certs.filter(c => c?.error == null).map(c => c.uid),
 				errors: certs.filter(c => c?.error != null),
 				template
