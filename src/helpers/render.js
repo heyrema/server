@@ -12,16 +12,19 @@ const {
 	SINGLE_WHITE_PIXEL
 } = require('../constants');
 
-const RESOURCES = path.join(INTERNAL_STATIC_DIR, 'fonts.json');
-if (fs.existsSync(RESOURCES)) {
-	const fonts = fs.readJSONSync(RESOURCES).filter(i => i.type === 'font');
-	for (const font of fonts) {
-		const {
-			path: fontPath,
-			family
-		} = font;
-		registerFont(path.join(INTERNAL_STATIC_DIR, fontPath), { family });
+if (!process.env.FONTS_LOADED) {
+	const RESOURCES = path.join(INTERNAL_STATIC_DIR, 'items.json');
+	if (fs.existsSync(RESOURCES)) {
+		const fonts = fs.readJSONSync(RESOURCES).filter(i => i.type === 'font');
+		for (const font of fonts) {
+			const {
+				path: fontPath,
+				family
+			} = font;
+			registerFont(path.join(INTERNAL_STATIC_DIR, fontPath), { family });
+		}
 	}
+	process.env.FONTS_LOADED = 1;
 }
 
 // Render a preview of a template or a certificate

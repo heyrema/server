@@ -35,7 +35,7 @@ const exitHandler = function(sig, err) {
 	if (fs.existsSync(tempDirectory.name))
 		fs.emptyDirSync(tempDirectory.name);
 	tempDirectory.removeCallback();
-	console.log(`\rExitting Rema... 🌸`);
+	console.log(`Exitting Rema... 🌸`);
 	process.exit(exitCode);
 };
 
@@ -54,12 +54,6 @@ const certificateRouter = require('./routes/certificate');
 // For global await support
 (async () => {
 
-// Perform some initial checks
-const initResults = await require('./initCheck')();
-console.log(initResults.msg);
-if (!initResults.success)
-	process.exit(1);
-
 // Connect to database
 try {
 	await mongoose.connect(DB, {
@@ -67,11 +61,17 @@ try {
 		useUnifiedTopology: true,
 		useCreateIndex: true
 	});
-	console.log(`Connected to database. 🔐`);
+	console.log(`Connected to the database. 🔐`);
 } catch(e) {
 	console.error(`Failed to connect to database: "${e.message}"`);
 	process.exit(1);
 }
+
+// Perform some initial checks
+const initResults = await require('./initCheck')();
+console.log(initResults.msg);
+if (!initResults.success)
+	process.exit(1);
 
 const app = express();
 

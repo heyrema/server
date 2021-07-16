@@ -1,6 +1,6 @@
 {
   "name": "rema",
-  "version": "2.0.0-beta",
+  "version": "2.1.0-beta",
   "description": "A powerful certificate generation and management system.",
   "main": "index.js",
   "private": "true",
@@ -46,6 +46,7 @@
     "strftime": "^0.10.0",
     "tcp-port-used": "^1.0.2",
     "tmp": "^0.2.1",
+    "unzipper": "^0.10.11",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
