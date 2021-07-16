@@ -377,7 +377,7 @@ const renderCertificate = async (req, res) => {
  */
 const bulk = async (req, res) => {
 	const { file: list } = req;
-	const { template } = req.body;
+	const { template, title: globalTitle } = req.body;
 
 	const templateObj = await Template.findOne({ name: template });
 	if (templateObj == null) {
@@ -441,6 +441,7 @@ const bulk = async (req, res) => {
 				const certObj = {
 					template,
 					values,
+					title: globalTitle,
 					...preserve
 				};
 				
