@@ -177,7 +177,10 @@ const fieldSchema = new Schema({
 		required: false,
 		default: null
 	},
-	position: xySchema,
+	position: {
+		type: xySchema,
+		required: true
+	},
 	fixed: {
 		type: Boolean,
 		default: false
@@ -194,6 +197,10 @@ const valueSchema = new Schema({
 	value: {
 		type: Mixed,
 		default: null
+	},
+	visible: {
+		type: Boolean,
+		default: true
 	}
 }, {
 	_id: false

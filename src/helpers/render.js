@@ -1,5 +1,6 @@
+const fs = require('fs-extra');
 const path = require('path');
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas, loadImage, registerFont } = require('canvas');
 const strftime = require('strftime');
 
 const {
@@ -10,6 +11,18 @@ const {
 	MAX_CAIRO_DIMENSION,
 	SINGLE_WHITE_PIXEL
 } = require('../constants');
+
+const RESOURCES = path.join(INTERNAL_STATIC_DIR, 'fonts.json');
+if (fs.existsSync(RESOURCES)) {
+	const fonts = fs.readJSONSync(RESOURCES).filter(i => i.type === 'font');
+	for (const font of fonts) {
+		const {
+			path: fontPath,
+			family
+		} = font;
+		registerFont(path.join(INTERNAL_STATIC_DIR, fontPath), { family });
+	}
+}
 
 // Render a preview of a template or a certificate
 const render = async (cert, fmt) => {

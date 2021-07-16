@@ -130,3 +130,6 @@ dist
 # Temporary files
 tmp/
 temp/
+
+# Static content
+/static

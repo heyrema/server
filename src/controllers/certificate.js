@@ -15,7 +15,8 @@ const {
 	imgToBase64
 } = require('../helpers/image');
 const {
-	convertTo
+	convertTo,
+	defaultValue: getDefaultValue
 } = require('../helpers/types');
 const {
 	render
@@ -30,7 +31,7 @@ const {
 const validate = async body => {
 	const { values } = body;
 
-	if (values.filter(v => v?.value == null).length > 0)
+	if (values.filter(v => v?.value == null && v?.visible !== false).length > 0)
 		throw new Error(`Empty values not allowed!`);
 
 	const template = await Template.findOne({ name: body.template });
@@ -40,15 +41,12 @@ const validate = async body => {
 	const validValues = [];
 
 	for (const field of template.fields) {
-		if (field.placeholder)
-			continue;
-
 		const {
 			name,
 			type,
 			defaultValue,
 			required,
-			fixed
+			fixed,
 		} = field;
 
 		const matches = values.filter(v => v.name === name);
@@ -56,6 +54,22 @@ const validate = async body => {
 			throw new Error(`Duplicate values for the field '${name}' received!`);
 
 		const newField = matches[0];
+
+		let visible = true;
+		if ('visible' in (newField ?? {}))
+			visible = newField.visible;
+
+		if (newField?.visible === false)
+			newField.value = getDefaultValue[type];
+
+		if (field.placeholder) {
+			if (visible !== false)
+				continue;
+				
+			newField.value = field.value;
+			validValues.push({ ...newField });
+			continue;
+		}
 
 		// Check if required and missing
 		if (
@@ -113,7 +127,8 @@ const validate = async body => {
 
 		validValues.push({
 			name,
-			value: newValue
+			value: newValue,
+			visible
 		});
 	}
 
@@ -339,6 +354,9 @@ const renderCertificate = async (req, res) => {
 
 		const v = certificate.values.filter(v => v.name === f.name)[0];
 		f.value = v.value;
+
+		if (!v.visible)
+			f.skip = true;
 	}
 
 	try {

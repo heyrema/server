@@ -1,3 +1,7 @@
+const {
+	SINGLE_WHITE_PIXEL
+} = require('../constants');
+
 const convertTo = {
 	Number: v => {
 		if (v == null || v === '')
@@ -45,6 +49,15 @@ const convertTo = {
 	}
 };
 
+const defaultValue = {
+	Number: 0,
+	get Date() { return new Date(Date.now()); },
+	String: 'Hello',
+	Image: SINGLE_WHITE_PIXEL,
+	Boolean: true
+};
+
 module.exports = {
-	convertTo
+	convertTo,
+	defaultValue
 };

@@ -20,66 +20,67 @@ const {
 } = require('../helpers/placeholder');
 
 /**
- * Validate and do something
- * @param {Request} req
- * @param {Response} res
+ * Get the valid version
  * @param {Object} body
  */
-const validateAndDoSomething = async (req, res, body) => {
+const validate = async body => {
 	if (!await validateImage(body.background))
-		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for certificate background: Image not found!`);
+		throw new Error(`Invalid value for certificate background: Image not found!`);
 	
 	const imgLocation = await getImageLocation(body.background);
 	if (!imgLocation)
-		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for background: Image not accessible!`);
+		throw new Error(`Invalid value for background: Image not accessible!`);
 	
 	body.background = imgLocation;
 
 	if (body.fields == null)
-		return res.status(statusCode.BAD_REQUEST).send(`Invalid value for fields!`);
+		throw new Error(`Invalid value for fields!`);
 
 	for (const field of body.fields) {
 		if (body.fields.filter(f => f.name === field.name).length > 1)
-			return res.status(statusCode.BAD_REQUEST).send(`Duplicate fields named '${field.name}' received!`);
+			throw new Error(`Duplicate fields named '${field.name}' received!`);
+
+		if (field.type == null)
+			field.type = 'String';
 
 		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
-			return res.status(statusCode.BAD_REQUEST).send(`Invalid type for field '${field.name}': Only Number, Boolean, String, Image, and Date allowed.`);
+			throw new Error(`Invalid type for field '${field.name}': Only Number, Boolean, String, Image, and Date allowed.`);
 		
 		if (['TITLE', 'template', 'uid', '_id'].indexOf(field.name) >= 0)
-			return res.status(statusCode.NOT_ACCEPTABLE).send(`Invalid name for field '${field.name}': Name not allowed for fields.`);
+			throw new Error(`Invalid name for field '${field.name}': Name not allowed for fields.`);
 
 		if ((field.fixed || field.placeholder) && field.value == null)
-			return res.status(statusCode.BAD_REQUEST).send(`Fixed field '${field.name}' cannot have an empty value.`);
+			throw new Error(`Fixed field '${field.name}' cannot have an empty value.`);
 
 		if (field.placeholder)
 			if (!isValidPlaceholder(field))
-				return res.status(statusCode.BAD_REQUEST).send(`Field '${field.name}' is an invalid placeholder!`);
+				throw new Error(`Field '${field.name}' is an invalid placeholder!`);
 			else
 				continue;
 
 		if (field.type === 'Image') {
 			if (field.image == null)
-				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': An expected size must be defined.`);
+				throw new Error(`Invalid value for field '${field.name}': An expected size must be defined.`);
 
 			const { value, defaultValue } = field ?? {};
 			if (value != null && !await validateImage(value))
-				return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not found!`);
+				throw new Error(`Invalid value for field '${field.name}': Image not found!`);
 			
 			if (value != null) {
 				const imgLocation = await getImageLocation(value);
 				if (!imgLocation)
-					return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Image not accessible!`);
+					throw new Error(`Invalid value for field '${field.name}': Image not accessible!`);
 				
 				field.value = imgLocation;
 			}
 
 			if (defaultValue != null && !await validateImage(defaultValue))
-				return res.status(statusCode.BAD_REQUEST).send(`Invalid default value for field '${field.name}': Image not found!`);
+				throw new Error(`Invalid default value for field '${field.name}': Image not found!`);
 			
 			if (defaultValue != null) {
 				const imgLocation = await getImageLocation(defaultValue);
 				if (!imgLocation)
-					return res.status(statusCode.BAD_REQUEST).send(`Invalid default value for field '${field.name}': Image not accessible!`);
+					throw new Error(`Invalid default value for field '${field.name}': Image not accessible!`);
 				
 				field.defaultValue = imgLocation;
 			}
@@ -93,7 +94,7 @@ const validateAndDoSomething = async (req, res, body) => {
 			} = field.textFormat;
 
 			if (style != null && style?.type == 'gradient' && (style.gradient == null || style.gradient.stops?.length < 2))
-				return res.status(statusCode.BAD_REQUEST).send(`Invalid style for field '${field.name}': Invalid gradient configuration!`);
+				throw new Error(`Invalid style for field '${field.name}': Invalid gradient configuration!`);
 		}
 
 		if (field.type === 'Date') {
@@ -106,7 +107,7 @@ const validateAndDoSomething = async (req, res, body) => {
 					try {
 						new Date(Date.parse(value)).toISOString();
 					} catch(e) {
-						return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Invalid date! Use the UTC/ISO format.`);
+						throw new Error(`Invalid value for field '${field.name}': Invalid date! Use the UTC/ISO format.`);
 					}
 				}
 			}
@@ -118,14 +119,28 @@ const validateAndDoSomething = async (req, res, body) => {
 					try {
 						new Date(Date.parse(defaultValue)).toISOString();
 					} catch(e) {
-						return res.status(statusCode.BAD_REQUEST).send(`Invalid value for field '${field.name}': Invalid date! Use the UTC/ISO format.`);
+						throw new Error(`Invalid value for field '${field.name}': Invalid date! Use the UTC/ISO format.`);
 					}
 				}
 			}
 		}
 	}
+};
 
-	return true;
+/**
+ * Validate and do something
+ * @param {Request} req
+ * @param {Response} res
+ * @param {Object} body
+ */
+const validateAndDoSomething = async (req, res, body) => {
+	try {
+		await validate(body);
+		return true;
+	} catch(e) {
+		res.status(statusCode.BAD_REQUEST).send(e.message);
+		return false;
+	}
 };
 
 /**
@@ -512,6 +527,7 @@ const patch = async (req, res) => {
  */
 const exportTemplate = async (req, res) => {
 	const { name } = req.params;
+	const plain = 'plain' in req.query;
 	const template = await Template.findOne({ name });
 
 	if (template == null)
@@ -527,7 +543,8 @@ const exportTemplate = async (req, res) => {
 		if (exportedObj[prop]) delete exportedObj[prop];
 	
 	try {
-		exportedObj.background = await imgToBase64(exportedObj.background);
+		if (!plain)
+			exportedObj.background = await imgToBase64(exportedObj.background);
 	} catch(e) {
 		const msg = `Failed to export template '${name}': Unable to export background (${e.message})!`;
 		console.error(msg);
@@ -536,7 +553,7 @@ const exportTemplate = async (req, res) => {
 	}
 
 	for (const field of exportedObj.fields) {
-		if (field.type !== 'Image')
+		if (field.type !== 'Image' || plain)
 			continue;
 
 		try {
