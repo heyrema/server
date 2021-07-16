@@ -45,6 +45,9 @@ const validateAndDoSomething = async (req, res, body) => {
 		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
 			return res.status(statusCode.BAD_REQUEST).send(`Invalid type for field '${field.name}': Only Number, Boolean, String, Image, and Date allowed.`);
 		
+		if (['TITLE', 'template', 'uid', '_id'].indexOf(field.name) >= 0)
+			return res.status(statusCode.NOT_ACCEPTABLE).send(`Invalid name for field '${field.name}': Name not allowed for fields.`);
+
 		if ((field.fixed || field.placeholder) && field.value == null)
 			return res.status(statusCode.BAD_REQUEST).send(`Fixed field '${field.name}' cannot have an empty value.`);
 

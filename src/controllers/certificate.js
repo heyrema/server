@@ -384,8 +384,6 @@ const bulk = async (req, res) => {
 		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${template}`);
 	}
 
-	// console.log((await fs.readFile(list.path)).toString());
-
 	let items = [];
 
 	const listReadStream = fs.createReadStream(list.path, { encoding: 'utf-8' });
@@ -403,6 +401,26 @@ const bulk = async (req, res) => {
 			let certs = [];
 			
 			for (const item of items) {
+				['template', 'uid', '_id'].forEach(v => {
+					if (v in item)
+						delete item[v];
+				});
+
+				let preserve = {};
+
+				[
+					{
+						plac: 'TITLE',
+						prop: 'title'
+					}
+				].forEach(({ plac, prop }) => {
+					if (plac in item) {
+						if (item[plac] !== '')
+							preserve[prop] = item[plac];
+						delete item[plac];
+					}
+				});
+
 				let values = Object.keys(item).map(k => ({
 					name: k,
 					value: item[k] === '' || item[k] == null ? null : item[k]
@@ -422,7 +440,8 @@ const bulk = async (req, res) => {
 
 				const certObj = {
 					template,
-					values
+					values,
+					...preserve
 				};
 				
 				try {
