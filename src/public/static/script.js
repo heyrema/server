@@ -87,6 +87,35 @@ $(async function() {
 				return linkedURL;
 			})(pageURL, certificate.title, 'Rema by Param Siddharth')
 		});
+		$('#whatsapp').attr({
+			href: (text => {
+				const waURL = new URL('https://wa.me');
+				waURL.search = new URLSearchParams({
+					text
+				});
+				return waURL;
+			})(`${msg}, ${pageURL}`)
+		});
+		$('#copyLink').on('click', () => {
+			const el = $('<input>');
+			$('body').append(el);
+			el.val(pageURL).select();
+			document.execCommand('copy');
+			window.toast(`Copied to clipboard!`, {
+				toastClass: 'bg-toast float-right',
+				duration: 1500
+			});
+			el.remove();
+		});
+
+		$('.cred-id').on('click', () => {
+			document.execCommand('copy');
+			window.getSelection().removeAllRanges();
+			window.toast(`Copied to clipboard!`, {
+				toastClass: 'bg-toast float-right',
+				duration: 1000
+			});
+		}).attr('title', 'Click to copy');
 	}
 });
 
