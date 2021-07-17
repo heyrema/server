@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+	<title><%= locals.title ?? 'Certificate' %></title>
+	<link rel="stylesheet" href="<%= base %>modules/bootstrap/dist/css/bootstrap.min.css">
+	<link rel="stylesheet" href="<%= base %>modules/bootstrap-social/bootstrap-social.css">
+	<link rel="stylesheet" href="<%= base %>modules/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="<%= base %>modules/css-spinners/dist/all.min.css">
+	<link rel="stylesheet" href="<%= base %>static/style.css">
+	<script defer src="<%= base %>modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script defer src="<%= base %>modules/jquery/dist/jquery.min.js"></script>
+	<script defer src="<%= base %>modules/toast-me/lib/toast-me.min.js"></script>
+	<% if (locals.useScript) { %>
+		<script defer src="<%= base %>static/script.js"></script>
+	<% } %>
+</head>
+<body>

@@ -1,0 +1,30 @@
+<%- include('partials/top', { title: 'Rema', base: base }) %>
+<div class="container-fluid text-white">
+	<%- include('partials/header', { title: locals.title ?? 'Rema' }) %>
+	<form autocomplete="off" onsubmit="window.location = `<%= base %>certificate/${document.getElementById('credID').value}`; return false;">
+	<div class="row text-center">
+		<div class="col-12 col-md-6 offset-md-3">
+			<div id='lookup' class="input-group">
+				<div class="input-group-prepend">
+					<span class="text-white input-group-text rounded-top-right-0 rounded-bottom-right-0">Credential ID</span>
+				</div>
+				<input autofocus required id='credID' type="text" class="text-white font-monospace form-control">
+			</div>
+		</div>
+	</div>
+	<div class="row text-center mt-2">
+		<div class="col-12 col-md-4 offset-md-4">
+			<a id='navigate' href="javascript:void(0)" onclick="if (!document.forms[0].checkValidity()) document.forms[0].reportValidity(); else { window.location = `<%= base %>certificate/${document.getElementById('credID').value}`; }" class="btn btn-block btn-secondary">Lookup</a>
+		</div>
+	</div>
+	</form>
+	<% if (locals.directory) { %>
+		<div class="row text-center small mt-2">
+			<div class="col-12 col-md-6 offset-md-3">
+				<a class='custom-link-unstyled' href='<%= base %>directory/'>Directory</a>
+			</div>
+		</div>
+	<% } %>
+</div>
+<script>document.getElementById('credID').focus();</script>
+<%- include('partials/bottom') %>

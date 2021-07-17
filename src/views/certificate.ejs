@@ -1,0 +1,44 @@
+<%- include('partials/top', { useScript: true }) %>
+	<div class="container-fluid text-white">
+		<%- include('partials/header', { title: locals?.info?.title ?? 'Certificate', base }) %>
+		<div class='visible-pre-completion row text-center mb-2'>
+			<div class='col-12'>
+				<div class='spin-skeleton light'></div>
+			</div>
+		</div>
+		<div hidden class="visible-post-completion row">
+			<div id='certificate-wrapper' class='col-12 col-md-6 offset-md-3 p-0 mb-3'>
+				<div id='certificate' class="d-block m-auto"
+					data-width="<%= info.dimensions.x %>"
+					data-height="<%= info.dimensions.y %>"
+					data-src="<%= base %><%= download %>"
+					data-title="<%= locals?.info?.title ?? "Certificate" %>"
+				></div>
+			</div>
+		</div>
+		<div hidden id='links' class='visible-post-completion row text-center'>
+			<div class='col-12 col-md-6 offset-md-3 mb-1'>
+				<a href='#' target='_blank' id='email' class='btn btn-social-icon btn-vk'>
+					<i class='fa fa-envelope'></i>
+				</a>
+				<a href='#' target='_blank' id='facebook' class='btn btn-social-icon btn-facebook'>
+					<i class='fa fa-facebook'></i>
+				</a>
+				<a href='#' target='_blank' id='twitter' class='btn btn-social-icon btn-twitter'>
+					<i class='fa fa-twitter'></i>
+				</a>
+				<a href='#' target='_blank' id='linkedin' class='btn btn-social-icon btn-linkedin'>
+					<i class='fa fa-linkedin'></i>
+				</a>
+			</div>
+			<div class='col-12 col-md-6 offset-md-3'>
+				<a download="<%= locals.filename ?? 'credential' %>.png" href='<%= base %><%= download %>.png' onclick='downloadCert("PNG");' class='btn btn-success'>
+					<i class='fa fa-arrow-down'></i> PNG
+				</a>
+				<a download="<%= locals.filename ?? 'credential' %>.pdf" href='<%= base %><%= download %>.pdf' onclick='downloadCert("PDF");' class='btn btn-primary'>
+					<i class='fa fa-arrow-down'></i> PDF
+				</a>
+			</div>
+		</div>
+	</div>
+<%- include('partials/bottom', { uid: locals.uid }) %>

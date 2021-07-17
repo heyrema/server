@@ -6,6 +6,7 @@
  * MAX_DIMENSION_OVERRIDE: Override the maximum dimension supported by Rema; Can go as high as 32767 (the maximum supported by Cairo)
  * INTERNAL_STATIC_DIR: The folder where all internal static resources are stored by Rema, such as images.
  * BASE_ROUTE: The route on which Rema is mounted, '/' by default.
+ * DIRECTORY: Any non-empty value implies the certificate directory is made available.
  */
 require('dotenv').config();
 
@@ -53,6 +54,7 @@ const {
 
 const templateRouter = require('./routes/template');
 const certificateRouter = require('./routes/certificate');
+const publicRouter = require('./routes/public');
 
 // For global await support
 (async () => {
@@ -82,6 +84,8 @@ const app = express();
 if (process.env.NODE_ENV !== 'production' || !process.env.HIDE_DEBUG_OUTPUT)
 	app.use(morgan('dev'));
 
+app.set('view engine', 'ejs');
+
 // Powered by Rema :P
 app.use((req, res, next) => {
 	let poweredBy = res.getHeader('X-Powered-By');
@@ -103,6 +107,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/template', templateRouter);
 app.use('/api/certificate', certificateRouter);
+app.use('/', publicRouter);
 
 app.all('*', (req, res) => res.status(statusCode.NOT_IMPLEMENTED).send('Hello, World! :) Check back later for more.'));
 
