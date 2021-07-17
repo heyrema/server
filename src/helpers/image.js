@@ -7,20 +7,13 @@ const {
 	lookup: mimeType
 } = require('mime-types');
 
-const {
-	INTERNAL_STATIC_DIR
-} = require('../constants');
+const { resolveItemPath } = require('./resolution');
+const {	INTERNAL_STATIC_DIR } = require('../constants');
 
 // Test if image is valid
 const validateImage = async src => {
-	if (!/^(https?\:\/\/|data\:)/.test(src)) {
-		try {
-			const location = path.join(INTERNAL_STATIC_DIR, src);
-			await fs.stat(location);
-		} catch(e) {
-			return false;
-		}
-	}
+	if (!/^(https?\:\/\/|data\:)/.test(src))
+		return resolveItemPath(src);
 	return true;
 };
 
@@ -80,7 +73,7 @@ const getImageLocation = async src => {
 };
 
 const imgToBase64 = async name => {
-	const buf = await fs.readFile(path.join(INTERNAL_STATIC_DIR, name));
+	const buf = await fs.readFile(resolveItemPath(name));
 	const extension = path.extname(name);
 	const contentType = mimeType(extension);
 	const dataURI = `data:${contentType};base64,${buf.toString('base64')}`;

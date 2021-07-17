@@ -4,16 +4,15 @@ const { createCanvas, loadImage, registerFont } = require('canvas');
 const strftime = require('strftime');
 
 const {
-	getPlaceholder, isValidPlaceholder
-} = require('../helpers/placeholder');
-const {
-	INTERNAL_STATIC_DIR,
 	MAX_CAIRO_DIMENSION,
 	SINGLE_WHITE_PIXEL
 } = require('../constants');
 
+const { getPlaceholder } = require('./placeholder');
+const { resolveItemPath } = require('./resolution');
+
 if (!process.env.FONTS_LOADED) {
-	const RESOURCES = path.join(INTERNAL_STATIC_DIR, 'items.json');
+	const RESOURCES = resolveItemPath('items.json');
 	if (fs.existsSync(RESOURCES)) {
 		const fonts = fs.readJSONSync(RESOURCES).filter(i => i.type === 'font');
 		for (const font of fonts) {
@@ -21,7 +20,7 @@ if (!process.env.FONTS_LOADED) {
 				path: fontPath,
 				family
 			} = font;
-			registerFont(path.join(INTERNAL_STATIC_DIR, fontPath), { family });
+			registerFont(resolveItemPath(fontPath), { family });
 		}
 	}
 	process.env.FONTS_LOADED = 1;
@@ -89,7 +88,7 @@ const render = async (cert, fmt) => {
 	}
 
 	try {
-		const bgImg = await loadImage(path.join(INTERNAL_STATIC_DIR, cert.background));
+		const bgImg = await loadImage(resolveItemPath(cert.background));
 		ctx.drawImage(bgImg, 0, 0, width, height);
 	} catch(e) {}
 
@@ -134,7 +133,7 @@ const render = async (cert, fmt) => {
 				value = SINGLE_WHITE_PIXEL;
 			}
 
-			const toLoad = value.startsWith('data:') ? value : path.join(INTERNAL_STATIC_DIR, value);
+			const toLoad = value.startsWith('data:') ? value : resolveItemPath(value);
 			const imgToDraw = await loadImage(toLoad);
 			ctx.drawImage(imgToDraw, x, y, width, height);
 		} else {

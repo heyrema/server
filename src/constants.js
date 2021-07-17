@@ -1,6 +1,6 @@
 const path = require('path');
 
-const INTERNAL_STATIC_DIR = process.env.INTERNAL_STATIC_DIR ?? path.resolve(__dirname, '..', 'static');
+const INTERNAL_STATIC_DIR = process.env.INTERNAL_STATIC_DIR ?? path.resolve(__dirname, '..', 'static') + path.sep;
 
 // Reducing to consume less memory, exceeding it will cause the rendered output to be scaled down
 const MAX_CAIRO_DIMENSION = (
