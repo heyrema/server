@@ -536,8 +536,7 @@ const exportTemplate = async (req, res) => {
 	const exportedObj = { ...template._doc };
 	const propsToPrune = [
 		'_id',
-		'__v',
-		'date'
+		'__v'
 	];
 	for (const prop of propsToPrune)
 		if (exportedObj[prop]) delete exportedObj[prop];
