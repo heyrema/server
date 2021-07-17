@@ -22,6 +22,9 @@ const ON_DEATH = require('death')({
 	uncaughtException: true
 });
 
+if ('FONTS_LOADED' in process.env)
+	delete process.env.FONTS_LOADED;
+
 const tempDirectory = tmp.dirSync();
 process.env.TMP_DIR = tempDirectory.name;
 

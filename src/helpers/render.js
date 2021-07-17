@@ -11,23 +11,30 @@ const {
 const { getPlaceholder } = require('./placeholder');
 const { resolveItemPath } = require('./resolution');
 
-if (!process.env.FONTS_LOADED) {
-	const RESOURCES = resolveItemPath('items.json');
-	if (fs.existsSync(RESOURCES)) {
-		const fonts = fs.readJSONSync(RESOURCES).filter(i => i.type === 'font');
-		for (const font of fonts) {
-			const {
-				path: fontPath,
-				family
-			} = font;
-			registerFont(resolveItemPath(fontPath), { family });
+// Load fonts
+const loadFonts = () => {
+	if (!process.env.FONTS_LOADED) {
+		const RESOURCES = resolveItemPath('items.json');
+		if (fs.existsSync(RESOURCES)) {
+			const fonts = fs.readJSONSync(RESOURCES).filter(i => i.type === 'font');
+			for (const font of fonts) {
+				const {
+					path: fontPath,
+					family
+				} = font;
+				registerFont(resolveItemPath(fontPath), { family });
+			}
+			process.env.FONTS_LOADED = 1;
 		}
 	}
-	process.env.FONTS_LOADED = 1;
 }
+
+loadFonts();
 
 // Render a preview of a template or a certificate
 const render = async (cert, fmt) => {
+	loadFonts();
+
 	let {
 		x: width,
 		y: height
