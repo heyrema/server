@@ -18,7 +18,7 @@ const BASE_ROUTE = process.env.BASE_ROUTE ?
 	)
 	: '/';
 
-const STOCK_DATA_URL = `https://github.com/paramsiddharth/rema/releases/download/stock-data-v1.0/static.zip`;
+const STOCK_DATA_URL = `https://github.com/paramsiddharth/rema/releases/download/stock-data-v2.0/static.zip`;
 
 module.exports = {
 	INTERNAL_STATIC_DIR,
