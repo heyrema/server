@@ -14,6 +14,8 @@ const packageJson = require('./package.json');
 const fs = require('fs-extra');
 const path = require('path');
 const express = require('express');
+const expressMinify = require('express-minify');
+const expressMinifyHTML = require('express-minify-html-2');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const { statusCode } = require('statushttp');
@@ -83,6 +85,22 @@ const app = express();
 // Show debug output to console
 if (process.env.NODE_ENV !== 'production' || !process.env.HIDE_DEBUG_OUTPUT)
 	app.use(morgan('dev'));
+
+if (!process.env.NO_MINIFY) {
+	app.use(expressMinify());
+	app.use(expressMinifyHTML({
+		override: true,
+		exception_url: false,
+		htmlMinifier: {
+			removeComments: true,
+			collapseWhitespace: true,
+			collapseBooleanAttributes: true,
+			removeAttributeQuotes: true,
+			removeEmptyAttributes: true,
+			minifyJS: true
+		}
+	}));
+}
 
 app.set('view engine', 'ejs');
 
