@@ -96,6 +96,12 @@ $(async function() {
 				return waURL;
 			})(`${msg}, ${pageURL}`)
 		});
+		$('#shareLink').on('click', () => {
+			navigator.share && navigator.share({
+				title: msg,
+				url: pageURL
+			});
+		});
 		$('#copyLink').on('click', () => {
 			const el = $('<input>');
 			$('body').append(el);
