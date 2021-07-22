@@ -9,8 +9,9 @@ const router = Router();
 router.route('/')
 .get(controller.index);
 
-router.route('/directory')
-.get(controller.directory);
+if (process.env.DIRECTORY)
+	router.route('/directory')
+	.get(controller.directory);
 
 router.route('/certificate/:uid')
 .get(controller.certificate);

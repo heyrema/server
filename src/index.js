@@ -6,7 +6,7 @@
  * MAX_DIMENSION_OVERRIDE: Override the maximum dimension supported by Rema; Can go as high as 32767 (the maximum supported by Cairo)
  * INTERNAL_STATIC_DIR: The folder where all internal static resources are stored by Rema, such as images.
  * BASE_ROUTE: The route on which Rema is mounted, '/' by default.
- * DIRECTORY: Any non-empty value implies the certificate directory is made available.
+ * DIRECTORY: Any non-empty value implies the certificate directory is to be made available.
  */
 require('dotenv').config();
 
