@@ -285,11 +285,17 @@ const patch = async (req, res) => {
 	const existingValues = certificate.values.map(v => v.name);
 	const newValues = body.values.filter(v => v?.name != null && v?.value != null).filter(v => existingValues.indexOf(v.name) < 0);
 	const updatedOldValues = body.values.filter(v => v?.name != null && v?.value != null).filter(v => existingValues.indexOf(v.name) >= 0);
+	const updatedOldValueNames = updatedOldValues.map(v => v.name);
+	const notUpdatedExistingValueNames = existingValues.filter(v => updatedOldValueNames.indexOf(v.name) < 0);
+	const notUpdatedExistingValues = certificate.values.filter(v => notUpdatedExistingValueNames.indexOf(v.name) >= 0);
 	body.values = [
+		...notUpdatedExistingValues,
 		...updatedOldValues,
 		...newValues
 	];
 	body.template = template.name;
+
+	console.log(body)
 
 	try {
 		if (await validateAndDoSomething(req, res, body) !== true)
@@ -297,7 +303,7 @@ const patch = async (req, res) => {
 		const certificate = await Certificate.findOneAndUpdate({
 			uid
 		}, { $set: body }, {
-			useFindAndModify: true,
+			useFindAndModify: false,
 			new: true
 		});
 		res.status(statusCode.OK).json({

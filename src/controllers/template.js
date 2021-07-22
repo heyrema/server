@@ -507,7 +507,7 @@ const patch = async (req, res) => {
 		const template = await Template.findOneAndUpdate({
 			name
 		}, { $set: body }, {
-			useFindAndModify: true,
+			useFindAndModify: false,
 			new: true
 		});
 		res.status(statusCode.OK).json({
