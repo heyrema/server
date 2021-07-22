@@ -22,8 +22,6 @@ const {
 	render
 } = require('../helpers/render');
 
-
-
 /**
  * Get the valid version
  * @param {Object} body

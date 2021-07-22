@@ -26,8 +26,8 @@ const certificateSchema = new Schema({
 	id: false,
 	versionKey: false,
 	timestamps: {
-		updatedAt: 'date',
-		createdAt: false
+		createdAt: 'date',
+		updatedAt: false
 	}
 });
 
