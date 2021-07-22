@@ -401,10 +401,12 @@ const bulk = async (req, res) => {
 	const { file: list } = req;
 	const { template, title: globalTitle } = req.body;
 
+	if (list == null)
+		return res.status(statusCode.NOT_FOUND).send(`List not provided!`);
+
 	const templateObj = await Template.findOne({ name: template });
-	if (templateObj == null) {
+	if (templateObj == null)
 		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${template}`);
-	}
 
 	let items = [];
 
