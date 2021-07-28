@@ -470,7 +470,7 @@ const bulk = async (req, res) => {
 					title: globalTitle,
 					...preserve
 				};
-				
+
 				try {
 					await validate(certObj);
 				} catch(e) {
