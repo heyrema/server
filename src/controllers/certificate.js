@@ -400,6 +400,7 @@ const renderCertificate = async (req, res) => {
 const bulk = async (req, res) => {
 	const { file: list } = req;
 	const { template, title: globalTitle } = req.body;
+	const objects = Object.keys(req.query).indexOf('objects') >= 0;
 
 	if (list == null)
 		return res.status(statusCode.NOT_FOUND).send(`List not provided!`);
@@ -412,7 +413,7 @@ const bulk = async (req, res) => {
 
 	const listReadStream = fs.createReadStream(list.path, { encoding: 'utf-8' });
 	const parser = csv();
-	
+
 	listReadStream.pipe(parser)
 		.on('data', item => items.push(item))
 		.on('error', e => {
@@ -431,13 +432,14 @@ const bulk = async (req, res) => {
 				});
 
 				let preserve = {};
-
-				[
+				const placs = [
 					{
 						plac: 'TITLE',
 						prop: 'title'
 					}
-				].forEach(({ plac, prop }) => {
+				];
+
+				placs.forEach(({ plac, prop }) => {
 					if (plac in item) {
 						if (item[plac] !== '')
 							preserve[prop] = item[plac];
@@ -473,13 +475,6 @@ const bulk = async (req, res) => {
 					await validate(certObj);
 				} catch(e) {
 					console.error(e.message);
-				}
-
-				const certificate = new Certificate(certObj);
-				
-				try{
-					await certificate.save();
-				} catch(e) {
 					certs.push({
 						...certObj,
 						error: e.message
@@ -487,15 +482,49 @@ const bulk = async (req, res) => {
 					continue;
 				}
 
-				certs.push(JSON.parse(JSON.stringify(certificate)));
+				const certificate = new Certificate(certObj);
+
+				const valueKeys = certificate.values.map(v => v.name);
+				const keysToRetain = Object.keys(item).filter(k => [
+					...placs.map(p => p.plac)
+				].indexOf(k) < 0 && valueKeys.indexOf(k) < 0);
+
+				const retained = keysToRetain.map(k => ({
+					name: k,
+					value: item[k] === '' || item[k] == null ? null : item[k]
+				}));
+
+				try{
+					await certificate.save();
+				} catch(e) {
+					certs.push({
+						...certObj,
+						retained,
+						error: e.message
+					});
+					continue;
+				}
+
+				certs.push({
+					...JSON.parse(JSON.stringify(certificate)),
+					retained
+				});
 			}
 
-			return res.status(statusCode.OK).json({
-				msg: `Certificates generated!`,
+			const resp = {
+				msg: certs.filter(c => c?.error != null).length < 1 ? `Certificates generated!` : `Finished with errors.`,
 				certificates: certs.filter(c => c?.error == null).map(c => c.uid),
 				errors: certs.filter(c => c?.error != null),
 				template
-			});
+			};
+
+			if (objects)
+				return res.status(statusCode.OK).json({
+					...resp,
+					successful: certs.filter(c => c?.error == null)
+				});
+
+			return res.status(statusCode.OK).json(resp);
 		});
 };
 
