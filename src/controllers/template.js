@@ -438,10 +438,17 @@ const extend = async (req, res) => {
  */
 const patch = async (req, res) => {
 	const { name } = req.params;
+	const force = Object.keys(req.query).indexOf('force') >= 0;
+	const keep = Object.keys(req.query).indexOf('keep') >= 0;
 	const oldTemplate = await Template.findOne({ name });
 
 	if (oldTemplate == null)
 		return res.status(statusCode.NOT_FOUND).send(`Template not found: ${name}`);
+
+	const certificates = await Certificate.find({ template: name });
+
+	if (certificates.length > 0 && !force)
+		return res.status(statusCode.NOT_ACCEPTABLE).send(`Cannot modify template with one or multiple certificates. Use the query parameter 'force' to bypass.`);
 	
 	if (!req.body.name) req.body.name = name;
 	
@@ -451,6 +458,9 @@ const patch = async (req, res) => {
 	const { body: reqBody } = req;
 
 	for (const docField in reqBody) {
+		if (!keep)
+			certificates.map(async c => await c.delete());
+
 		if (docField !== 'name' && docField.delete) {
 			delete oldBody[docField];
 			continue;
