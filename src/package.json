@@ -1,6 +1,6 @@
 {
   "name": "rema",
-  "version": "2.1.0-beta",
+  "version": "2.2.0-beta",
   "description": "A powerful certificate generation and management system.",
   "main": "index.js",
   "private": "true",
