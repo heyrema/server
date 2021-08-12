@@ -16,7 +16,7 @@ const checks = {
 	portFree: {
 		msg: `Checking if port ${PORT} is free...`,
 		action: async () => {
-			const port = PORT;
+			const port = Number(PORT);
 			
 			if (await portInUse(port))
 				throw new Error(`Port ${port} already in use!`);
