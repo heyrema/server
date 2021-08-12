@@ -92,11 +92,13 @@ if (!process.env.NO_MINIFY) {
 		override: true,
 		exception_url: false,
 		htmlMinifier: {
+			removeOptionalTags: false,
 			removeComments: true,
 			collapseWhitespace: true,
-			collapseBooleanAttributes: true,
-			removeAttributeQuotes: true,
-			removeEmptyAttributes: true,
+			collapseInlineWhitespace: true,
+			removeAttributeQuotes: false,
+			removeEmptyAttributes: false,
+			conservativeCollapse: true,
 			minifyJS: true
 		}
 	}));
