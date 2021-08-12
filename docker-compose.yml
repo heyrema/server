@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  rema:
+    build: ./src
+    ports:
+      - '8080:80'
+    environment:
+      DB: mongodb://db/rema
+      DIRECTORY: 1
+    volumes:
+      - rema-static:/home/node/static
+    depends_on:
+      - db
+  db:
+    image: mongo
+    volumes:
+      - rema-data:/data/db
+
+volumes:
+  rema-static:
+  rema-data:
