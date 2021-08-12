@@ -433,7 +433,7 @@ const extend = async (req, res) => {
 };
 
 /**
- * For extending an existing template
+ * For updating an existing template
  * @type {RequestHandler}
  */
 const patch = async (req, res) => {
