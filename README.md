@@ -13,6 +13,15 @@ See the [wiki](../../wiki) for instructions on setup and development.
 
 For other discussions, see the [discussions](../../discussions) page.
 
+## Execution (Docker)
+Use Docker Compose to spin up the containers.
+Make the necessary changes to `docker-compose.yml`, if any.
+```bash
+docker compose up -d
+```
+
+The application will run on port 8080 of the host machine.
+
 ## Execution
 Install the dependencies for `node-canvas` in your operating system as
 specified [here](../../wiki/Development-Setup).
