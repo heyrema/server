@@ -52,4 +52,7 @@ npm start
 
 For more information, see the [wiki](../../wiki).
 
+## Contributing
+See the [contribution guide](CONTRIBUTING.md).
+
 # Made with ❤ by [Param](https://www.paramsid.com).
