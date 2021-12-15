@@ -17,6 +17,7 @@ const templateSchema = new Schema({
 		type: String,
 		required: true
 	},
+	tags:[String],
 	fields: [fieldSchema],
 	background: {
 		type: String,
