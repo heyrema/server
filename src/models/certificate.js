@@ -17,7 +17,7 @@ const certificateSchema = new Schema({
 		type: String,
 		default: 'Certificate'
 	},
-	tags:[String],
+	tags: [String],
 	template: {
 		type: String,
 		required: true
