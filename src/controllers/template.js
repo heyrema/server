@@ -207,7 +207,18 @@ const getSingle = async (req, res) => {
  * @type {RequestHandler}
  */
 const getAll = async (req, res) => {
-	const templates = (await Template.find({}, {
+	if(req.query.tags){
+		try{
+		const formData = req.query.tags;
+		const decodedData = decodeURIComponent(formData);
+		const jsonObject = JSON.parse(decodedData);
+		req.query["tags"] = {"$in": jsonObject};
+		}catch(e){
+			return res.status(statusCode.BAD_REQUEST).send(`Bad JSON object encoding ${e.message}`);
+		}
+	}
+
+	const templates = (await Template.find(req.query, {
 		_id: 0,
 		name: 1
 	})).map(t => t.name);
