@@ -212,9 +212,9 @@ const getAll = async (req, res) => {
 		const formData = req.query.tags;
 		const decodedData = decodeURIComponent(formData);
 		const jsonObject = JSON.parse(decodedData);
-		req.query["tags"] = {"$in": jsonObject};
+		req.query['tags'] = {'$in': jsonObject};
 		}catch(e){
-			return res.status(statusCode.BAD_REQUEST).send(`Bad JSON object encoding ${e.message}`);
+			return res.status(statusCode.BAD_REQUEST).send(`Failed to get templates: Bad fromat ${e.message}`);
 		}
 	}
 
