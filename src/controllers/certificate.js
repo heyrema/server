@@ -198,7 +198,18 @@ const getSingle = async (req, res) => {
  * @type {RequestHandler}
  */
  const getAll = async (req, res) => {
-	const certificates = (await Certificate.find({}, {
+	if(req.query.tags){
+		try{
+		const formData = req.query.tags;
+		const decodedData = decodeURIComponent(formData);
+		const jsonObject = JSON.parse(decodedData);
+		req.query['tags'] = {'$in': jsonObject};
+		}catch(e){
+			return res.status(statusCode.BAD_REQUEST).send(`Failed to get certificates: Bad fromat ${e.message}`);
+		}
+	}
+
+	const certificates = (await Certificate.find(req.query, {
 		_id: 0,
 		uid: 1
 	})).map(t => t.uid);
