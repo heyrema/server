@@ -50,8 +50,8 @@ templateSchema.pre('save', function(next) {
 		)
 			throw new Error(`Invalid value for field '${field.name}': Only string, numeric, and boolean values allowed.`); */
 		
-		if (['Number', 'Boolean', 'String', 'Image', 'Date'].indexOf(field.type) < 0)
-			throw new Error(`Invalid type for field '${field.name}': Only Number, Boolean, String, Image, and Date allowed.`);
+		if (['Number', 'Boolean', 'String', 'Image', 'Date', 'QR'].indexOf(field.type) < 0)
+			throw new Error(`Invalid type for field '${field.name}': Only Number, Boolean, String, Image, Date, QR allowed.`);
 	}
 
 	next();
