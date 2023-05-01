@@ -504,7 +504,8 @@ const patch = async (req, res) => {
 
 					const objFields = [
 						'textFormat',
-						'image'
+						'image',
+						'qr'
 					];
 					for (const objField of objFields)
 						if (existingField[objField] != null && field[objField] != null)
