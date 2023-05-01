@@ -41,18 +41,14 @@ const getPlaceholder = o => {
 		return cert => {
 			let resultString = o.value;
 
-			console.log(resultString, o.name, o.type, o.value, ['String', 'QR'].indexOf(o.type) >= 0);
-
 			if (['String', 'QR'].indexOf(o.type) >= 0) {
 				for (const placeholderType in PLACEHOLDERS) {
 					if (o?.value?.includes(placeholderType) && PLACEHOLDERS[placeholderType].check(o)) {
-						console.log('=', placeholderType, PLACEHOLDERS[placeholderType]);
 						const placeholderValue = PLACEHOLDERS[placeholderType].get(cert);
 						resultString = resultString.replace(new RegExp(placeholderType, 'g'), placeholderValue);
 					}
 				}
 			} else {
-				console.log('+', o.value, PLACEHOLDERS[o.value], PLACEHOLDERS[o.value].get)
 				resultString = PLACEHOLDERS[o.value].get(cert);
 			}
 			return resultString;

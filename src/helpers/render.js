@@ -165,7 +165,6 @@ const render = async (cert, fmt) => {
 
 			const imgToDraw = await qr.render(value, Math.max(width, height), margin);
 			ctx.drawImage(imgToDraw, x, y, width, height);
-			console.log('Drawn!');
 		} else {
 			let {
 				fontSize,
