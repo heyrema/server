@@ -121,6 +121,11 @@ const validate = async body => {
 				}
 			}
 			break;
+			case 'QR': {
+				if (typeof newValue !== 'string')
+					throw new Error(`Only strings accepted for '${name}'!`);
+			}
+			break;
 		}
 
 		validValues.push({

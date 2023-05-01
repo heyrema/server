@@ -155,6 +155,7 @@ const fieldSchema = new Schema({
 	 * 3. String (Default)
 	 * 4. Image
 	 * 5. Date
+	 * 6. QR
 	 */
 	type: {
 		type: String,
@@ -168,6 +169,17 @@ const fieldSchema = new Schema({
 	image: {
 		type: new Schema({
 			size: xySchema
+		}, { _id: false }),
+		required: false,
+		default: null
+	},
+	qr: {
+		type: new Schema({
+			size: xySchema,
+			margin: {
+				type: Number,
+				default: 1
+			}
 		}, { _id: false }),
 		required: false,
 		default: null
