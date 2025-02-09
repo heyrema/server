@@ -13,6 +13,32 @@ See the [wiki](../../wiki) for instructions on setup and development.
 
 For other discussions, see the [discussions](../../discussions) page.
 
+## Development (Docker)
+Build the Docker image using Docker Compose.
+```bash
+docker compose build rema-dev
+```
+
+Start the container in the working directory.
+```bash
+docker compose up -d rema-dev
+```
+
+Attach to the container.
+```bash
+# The container might have a name
+# different from what's mentioned below.
+docker attach server-rema-dev-1
+```
+
+Install the dependencies.
+```bash
+cd /home/ubuntu/app/src
+npm ci
+```
+
+Use `npm run dev` to run the development server.
+
 ## Execution (Docker)
 Use Docker Compose to spin up the containers.
 Make the necessary changes to `docker-compose.yml`, if any.

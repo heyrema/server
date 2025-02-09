@@ -1,7 +1,6 @@
 const fs = require('fs-extra');
 const csv = require('csv-parser');
 const { statusCode } = require('statushttp');
-const { nanoid } = require('nanoid');
 const sanitizeFileName = require('sanitize-filename');
 
 // Only for documentation purposes
@@ -338,6 +337,7 @@ const patch = async (req, res) => {
  * @type {RequestHandler}
  */
 const renderCertificate = async (req, res) => {
+	const { nanoid } = await import('nanoid');
 	const { uid } = req.params;
 	const format = Object.keys(req.query).indexOf('pdf') >= 0 ? 'pdf' : 'png';
 	const download = Object.keys(req.query).indexOf('download') >= 0;

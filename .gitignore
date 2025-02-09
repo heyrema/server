@@ -133,3 +133,7 @@ temp/
 
 # Static content
 /static
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -2,3 +2,5 @@ Dockerfile
 .env
 node_modules/
 /static
+.DS_Store
+Thumbs.db

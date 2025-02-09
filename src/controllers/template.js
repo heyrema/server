@@ -1,5 +1,4 @@
 const { statusCode } = require('statushttp');
-const { nanoid } = require('nanoid');
 const sanitizeFileName = require('sanitize-filename');
 
 // Only for documentation purposes
@@ -174,6 +173,7 @@ const validateAndCreateNewTemplate = async (req, res, body) => {
  * @type {RequestHandler}
  */
 const naveen = async (req, res) => {
+	const { nanoid } = await import('nanoid');
 	let body = { ...req.body };
 
 	if (!body.name) body.name = nanoid();
@@ -325,6 +325,7 @@ const deleteMultiple = async (req, res) => {
  * @type {RequestHandler}
  */
 const preview = async (req, res) => {
+	const { nanoid } = await import('nanoid');
 	const { name } = req.params;
 	const format = Object.keys(req.query).indexOf('pdf') >= 0 ? 'pdf' : 'png';
 	const download = Object.keys(req.query).indexOf('download') >= 0;
@@ -373,6 +374,7 @@ const preview = async (req, res) => {
  * @type {RequestHandler}
  */
 const extend = async (req, res) => {
+	const { nanoid } = await import('nanoid');
 	const { name } = req.params;
 	const oldTemplate = await Template.findOne({ name });
 
@@ -552,6 +554,7 @@ const patch = async (req, res) => {
  * @type {RequestHandler}
  */
 const exportTemplate = async (req, res) => {
+	const { nanoid } = await import('nanoid');
 	const { name } = req.params;
 	const plain = 'plain' in req.query;
 	const template = await Template.findOne({ name });
