@@ -2,6 +2,8 @@ version: '3.9'
 
 services:
   rema:
+    image: rema
+    platform: linux/amd64
     build: ./src
     ports:
       - '8080:80'
@@ -12,6 +14,25 @@ services:
       - rema-static:/home/node/static
     depends_on:
       - db
+
+  rema-dev:
+    image: rema-dev
+    platform: linux/amd64
+    build:
+      dockerfile: devcontainer.Dockerfile
+    ports:
+      - '8080:8080'
+    environment:
+      DB: mongodb://db/rema
+      DIRECTORY: 1
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/home/ubuntu/app
+      - rema-static:/home/ubuntu/static
+    depends_on:
+      - db
+
   db:
     image: mongo
     volumes:
