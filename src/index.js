@@ -63,11 +63,7 @@ const publicRouter = require('./routes/public');
 
 // Connect to database
 try {
-	await mongoose.connect(DB, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
-		useCreateIndex: true
-	});
+	await mongoose.connect(DB);
 	console.log(`Connected to the database. 🔐`);
 } catch(e) {
 	console.error(`Failed to connect to database: "${e.message}"`);
@@ -129,7 +125,7 @@ app.use('/api/template', templateRouter);
 app.use('/api/certificate', certificateRouter);
 app.use('/', publicRouter);
 
-app.all('*', (req, res) => res.status(statusCode.NOT_IMPLEMENTED).send('Hello, World! :) Check back later for more.'));
+app.all('', (req, res) => res.status(statusCode.NOT_IMPLEMENTED).send('Hello, World! :) Check back later for more.'));
 
 app.listen(PORT, () => console.log(`\
 Rema up on port ${PORT}. 😎
